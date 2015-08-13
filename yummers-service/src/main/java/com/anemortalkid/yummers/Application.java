@@ -10,6 +10,7 @@ import org.springframework.context.ApplicationContext;
 
 import com.anemortalkid.yummers.associates.AssociateRepository;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceRepository;
+import com.anemortalkid.yummers.postoffice.EmailTestSample;
 
 @SpringBootApplication
 public class Application implements CommandLineRunner {
@@ -31,6 +32,6 @@ public class Application implements CommandLineRunner {
 		LOGGER.info("Associates stored= " + associateRepository.count());
 		LOGGER.info("FoodPreferences stored= "
 				+ foodPreferenceRepository.count());
+		LOGGER.info("Testing send email.");
 	}
-
 }
