@@ -11,8 +11,6 @@ public interface FoodPreferenceRepository extends
 
 	List<FoodPreference> findDistinctByPreferenceType(FoodPreferenceType preferenceType);
 	
-	FoodPreference findByAssociateId(String associateId);
-	
 	FoodPreference findByAssociate(Associate associate);
 	
 }

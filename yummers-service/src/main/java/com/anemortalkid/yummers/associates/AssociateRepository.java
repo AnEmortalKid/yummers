@@ -1,5 +1,7 @@
 package com.anemortalkid.yummers.associates;
 
+import java.util.List;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 /**
@@ -10,6 +12,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
  */
 public interface AssociateRepository extends MongoRepository<Associate, String> {
 
-	Associate findByFirstNameAndLastName(String firstName, String lastName);
-	
+	List<Associate> findByFirstNameAndLastName(String firstName, String lastName);
 }

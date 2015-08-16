@@ -11,22 +11,26 @@ import org.springframework.data.annotation.Id;
 public class Associate {
 
 	@Id
-	private String id;
-
+	private String associateId;
 	private String firstName;
 	private String lastName;
 
-	public Associate(String firstName, String lastName) {
+	public Associate() {
+		// auto json
+	}
+
+	public Associate(String associateId, String firstName, String lastName) {
+		this.associateId = associateId;
 		this.firstName = firstName;
 		this.lastName = lastName;
 	}
 
-	public String getId() {
-		return id;
+	public String getAssociateId() {
+		return associateId;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setAssociateId(String id) {
+		this.associateId = id;
 	}
 
 	public String getFirstName() {
@@ -45,11 +49,15 @@ public class Associate {
 		this.lastName = lastName;
 	}
 
+	public String getEmail() {
+		return firstName + "." + lastName + "@domain.com";
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("Associate [id=");
-		builder.append(id);
+		builder.append("Associate [associateId=");
+		builder.append(associateId);
 		builder.append(", firstName=");
 		builder.append(firstName);
 		builder.append(", lastName=");

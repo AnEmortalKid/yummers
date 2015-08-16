@@ -57,17 +57,16 @@ public class AssociateControllerTest {
 
 	@Test
 	public void testList() throws Exception {
-		Associate a1 = new Associate("a", "one");
-		Associate a2 = new Associate("a", "two");
+		Associate a1 = new Associate("ab231", "a", "one");
+		Associate a2 = new Associate("ab322", "a", "two");
 		List<Associate> testAssociates = Arrays.asList(a1, a2);
 		when(mockRespository.findAll()).thenReturn(testAssociates);
 
-		MockHttpServletRequestBuilder mockRequestBuilder = MockMvcRequestBuilders
-				.get("/associates/list").accept(MediaType.APPLICATION_JSON);
+		MockHttpServletRequestBuilder mockRequestBuilder = MockMvcRequestBuilders.get("/associates/list")
+				.accept(MediaType.APPLICATION_JSON);
 		ResultActions resultActions = mvc.perform(mockRequestBuilder);
 		resultActions.andExpect(status().isOk());
-		resultActions.andExpect(content().contentType(
-				TestUtil.APPLICATION_JSON_UTF8));
+		resultActions.andExpect(content().contentType(TestUtil.APPLICATION_JSON_UTF8));
 		resultActions.andExpect(jsonPath("$", hasSize(2)));
 		verify(mockRespository, Mockito.times(1)).findAll();
 	}

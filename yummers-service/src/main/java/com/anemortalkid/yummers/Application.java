@@ -30,8 +30,6 @@ public class Application implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		LOGGER.info("Associates stored= " + associateRepository.count());
-		LOGGER.info("FoodPreferences stored= "
-				+ foodPreferenceRepository.count());
-		LOGGER.info("Testing send email.");
+		LOGGER.info("FoodPreferences stored= " + foodPreferenceRepository.count());
 	}
 }

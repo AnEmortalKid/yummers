@@ -5,31 +5,36 @@ import java.net.URISyntaxException;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
-import com.anemortalkid.yummers.foodpreference.FoodPreference;
 
 public class ResponseFactory {
 
-	public static <T> ResponseEntity<T> respondFail(String location,
-			String message) throws URISyntaxException {
-		URI uri = new URI(location);
+	public static <T> YummersResponseEntity<T> respondFail(String location, String errorMessage) {
+		return new YummersResponseEntity<T>(errorMessage, getHeaders(location), HttpStatus.I_AM_A_TEAPOT);
+	}
+
+	public static <T> YummersResponseEntity<T> respondCreated(String location, T t) {
+
+		return new YummersResponseEntity<T>(t, getHeaders(location), HttpStatus.CREATED);
+	}
+
+	private static HttpHeaders getHeaders(String location) {
+		URI uri = null;
+		try {
+			uri = new URI(location);
+		} catch (URISyntaxException syntaxException) {
+			syntaxException.printStackTrace();
+		}
+
 		HttpHeaders headers = new HttpHeaders();
 		headers.setLocation(uri);
-		headers.set("I_AM_A_TEAPOT", message);
-		return new ResponseEntity<T>(headers, HttpStatus.I_AM_A_TEAPOT);
+		return headers;
 	}
 
-	public static <T> ResponseEntity<T> respondCreated(T t) {
-		return new ResponseEntity<T>(t, HttpStatus.CREATED);
+	public static <T> YummersResponseEntity<T> respondFound(String location, T body) {
+		return new YummersResponseEntity<T>(body, getHeaders(location), HttpStatus.FOUND);
 	}
 
-	public static <T> ResponseEntity<T> respondFound(T t) {
-		return new ResponseEntity<T>(t, HttpStatus.FOUND);
+	public static <T> YummersResponseEntity<T> respondOK(String location, T body) {
+		return new YummersResponseEntity<T>(body, getHeaders(location), HttpStatus.OK);
 	}
-
-	public static <T> ResponseEntity<T> respondOK(T t) {
-		return new ResponseEntity<T>(t, HttpStatus.OK);
-	}
-
 }
