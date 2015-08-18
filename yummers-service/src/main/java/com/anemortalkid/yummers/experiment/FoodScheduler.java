@@ -73,7 +73,7 @@ public class FoodScheduler {
 				breakfastParticipants);
 		Collections.shuffle(snackParticipants);
 		List<String> modifiableSnack = new ArrayList<String>(snackParticipants);
-
+		
 		// while not empty, schedule
 		int participantCount = breakfastParticipants.size();
 

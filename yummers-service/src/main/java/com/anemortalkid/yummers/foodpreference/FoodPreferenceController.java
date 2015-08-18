@@ -115,7 +115,7 @@ public class FoodPreferenceController {
 		}
 	}
 
-	private List<Associate> extractAssociates(List<FoodPreference> foodPreferences) {
+	public static List<Associate> extractAssociates(List<FoodPreference> foodPreferences) {
 		return foodPreferences.parallelStream().map(fp -> fp.getAssociate()).collect(Collectors.toList());
 	}
 
