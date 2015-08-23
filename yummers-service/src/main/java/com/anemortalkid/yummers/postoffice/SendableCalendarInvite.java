@@ -14,7 +14,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 
-public class SendableCalendarInvite implements Emailable {
+public class SendableCalendarInvite implements Sendable {
 
 	private CalendarInviteData inviteData;
 	private String subject;

@@ -4,54 +4,40 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.crypto.spec.RC2ParameterSpec;
-
-import org.hamcrest.BaseMatcher;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.anemortalkid.yummers.associates.Associate;
-import com.anemortalkid.yummers.associates.AssociateRepository;
-import com.anemortalkid.yummers.experiment.FridayFinder;
-import com.anemortalkid.yummers.foodpreference.FoodPreference;
+import com.anemortalkid.yummers.associates.AssociateController;
+import com.anemortalkid.yummers.foodevent.FoodEvent;
+import com.anemortalkid.yummers.foodevent.FoodEventController;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceController;
-import com.anemortalkid.yummers.foodpreference.FoodPreferenceRepository;
-import com.anemortalkid.yummers.foodpreference.FoodPreferenceType;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 import com.anemortalkid.yummers.rotation.Rotation;
 import com.anemortalkid.yummers.rotation.RotationController;
-import com.anemortalkid.yummers.rotation.RotationRepository;
 import com.anemortalkid.yummers.slots.Slot;
-import com.anemortalkid.yummers.slots.SlotRepository;
-
-import edu.emory.mathcs.backport.java.util.Arrays;
+import com.anemortalkid.yummers.slots.SlotController;
 
 public class FoodEventScheduler {
 
 	@Autowired
-	private SlotRepository slotRepository;
+	private SlotController slotController;
 
 	@Autowired
 	private RotationController rotationController;
 
 	@Autowired
-	private AssociateRepository associateRepository;
+	private AssociateController associateController;
 
 	@Autowired
-	private FoodPreferenceRepository foodPreferenceRepository;
+	private FoodPreferenceController foodPreferenceController;
 
 	@Autowired
-	private FoodEventRepository foodEventRepository;
+	private FoodEventController foodEventController;
 
 	public Rotation scheduleNewRotation() {
 		// get the preferences
-		List<FoodPreference> breakfastPrefs = foodPreferenceRepository
-				.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
-		List<Associate> breakfastAssociates = FoodPreferenceController.extractAssociates(breakfastPrefs);
-
-		List<FoodPreference> snackPres = foodPreferenceRepository
-				.findDistinctByPreferenceType(FoodPreferenceType.SNACK);
-		List<Associate> snackAssociates = FoodPreferenceController.extractAssociates(snackPres);
+		List<Associate> breakfastAssociates = foodPreferenceController.getAssociatesWithBreakfast();
+		List<Associate> snackAssociates = foodPreferenceController.getAssociatesWithSnack();
 
 		// check conditions
 		if (breakfastAssociates.size() != snackAssociates.size()) {
@@ -70,7 +56,7 @@ public class FoodEventScheduler {
 		}
 
 		// conditions guaranteed - check previous rotation
-		YummersResponseEntity<Rotation> response = rotationController.getCurrentRotation();
+		YummersResponseEntity<Rotation> response = rotationController.currentRotation();
 		Rotation currentRotation = response.getBody();
 
 		List<Associate> breakfastSchedulable = new ArrayList<>();
@@ -93,8 +79,8 @@ public class FoodEventScheduler {
 			String breakfastId = currentRotation.getNextBreakfastStarter();
 			String snackId = currentRotation.getNextSnackStarter();
 
-			Associate breakfastStarter = associateRepository.findOne(breakfastId);
-			Associate snackStarter = associateRepository.findOne(snackId);
+			Associate breakfastStarter = associateController.findById(breakfastId);
+			Associate snackStarter = associateController.findById(snackId);
 
 			breakfastIndex = breakfastAssociates.indexOf(breakfastStarter);
 			snackIndex = snackAssociates.indexOf(snackStarter);
@@ -134,9 +120,9 @@ public class FoodEventScheduler {
 
 		// Schedule the events
 		List<FoodEvent> foodEventSchedule = createSchedule(breakfastSchedulable, snackSchedulable);
+
 		// remove all
-		foodEventRepository.deleteAll();
-		foodEventRepository.save(foodEventSchedule);
+		foodEventController.saveNewEvents(foodEventSchedule);
 
 		return rotation;
 	}
@@ -149,29 +135,7 @@ public class FoodEventScheduler {
 
 		// check how many fridays we need
 		int fridaysNeeded = balancedBreakfast.size() / 2;
-		List<Slot> slots = slotRepository.findAll();
-
-		if (slots.size() < fridaysNeeded) {
-			// get next fridays
-			int fridaysToRequest = fridaysNeeded - slots.size();
-
-			// find the next x+1 so we at least have 1 for next time
-			fridaysToRequest++;
-
-			// get last friday available
-			DateTime lastSlotDate = null;
-			if (slots.isEmpty()) {
-				// well we are scheduling so get the time here
-				lastSlotDate = new DateTime();
-			} else {
-				Slot lastSlot = slots.get(slots.size() - 1);
-				lastSlotDate = lastSlot.getSlotDate();
-			}
-			List<DateTime> newFridays = FridayFinder.getNextFridaysFromDate(lastSlotDate, fridaysToRequest);
-			// insert them slots
-			newFridays.forEach(x -> slotRepository.save(new Slot(x)));
-			slots = slotRepository.findAll();
-		}
+		List<Slot> slots = slotController.getNextXSlots(fridaysNeeded);
 
 		// schedule that
 		List<FoodEvent> foodEvents = new ArrayList<>();
@@ -181,8 +145,10 @@ public class FoodEventScheduler {
 			Associate b2 = balancedBreakfast.get(i + 1);
 			Associate s1 = balancedSnack.get(i);
 			Associate s2 = balancedSnack.get(i + 1);
-			FoodEvent newEvent = new FoodEvent(getAssociateIds(b1, b2), getAssociateIds(s1, s2), slots.remove(0));
+			Slot slot = slots.remove(0);
+			FoodEvent newEvent = new FoodEvent(getAssociateIds(b1, b2), getAssociateIds(s1, s2), slot);
 			foodEvents.add(newEvent);
+			slotController.removeSlot(slot);
 		}
 
 		return foodEvents;

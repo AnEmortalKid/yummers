@@ -115,6 +115,10 @@ public class AssociateController {
 		return Optional.absent();
 	}
 
+	public Associate findById(String associateId) {
+		return associateRepository.findOne(associateId);
+	}
+
 	private Optional<Associate> createIfNotExists(String associateId, String firstName, String lastName) {
 		Associate found = associateRepository.findOne(associateId);
 		if (found == null) {

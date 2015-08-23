@@ -1,4 +1,4 @@
-package com.anemortalkid.yummers.schedule;
+package com.anemortalkid.yummers.foodevent;
 
 import java.util.List;
 

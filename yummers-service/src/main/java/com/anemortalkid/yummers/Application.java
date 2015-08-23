@@ -7,12 +7,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.anemortalkid.yummers.associates.AssociateRepository;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceRepository;
 import com.anemortalkid.yummers.postoffice.EmailTestSample;
 
 @SpringBootApplication
+@EnableScheduling
 public class Application implements CommandLineRunner {
 
 	@Autowired

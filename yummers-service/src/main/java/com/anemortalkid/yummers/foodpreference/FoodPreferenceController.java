@@ -39,13 +39,27 @@ public class FoodPreferenceController {
 		return ResponseFactory.respondFound(callingPath, associatesWithSnack);
 	}
 
+	public List<Associate> getAssociatesWithSnack() {
+		List<FoodPreference> foodPreferences = foodPreferenceRepository
+				.findDistinctByPreferenceType(FoodPreferenceType.SNACK);
+		List<Associate> associatesWithSnack = extractAssociates(foodPreferences);
+		return associatesWithSnack;
+	}
+
 	@RequestMapping(value = "/breakfast", method = RequestMethod.GET)
 	public YummersResponseEntity<List<Associate>> associatesWithBreakfast() {
 		String callingPath = "/preferences/breakfast";
 		List<FoodPreference> foodPreferences = foodPreferenceRepository
 				.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
-		List<Associate> associatesWithSnack = extractAssociates(foodPreferences);
-		return ResponseFactory.respondFound(callingPath, associatesWithSnack);
+		List<Associate> associatesWithBreakfast = extractAssociates(foodPreferences);
+		return ResponseFactory.respondFound(callingPath, associatesWithBreakfast);
+	}
+
+	public List<Associate> getAssociatesWithBreakfast() {
+		List<FoodPreference> foodPreferences = foodPreferenceRepository
+				.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
+		List<Associate> associatesWithBreakfast = extractAssociates(foodPreferences);
+		return associatesWithBreakfast;
 	}
 
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
