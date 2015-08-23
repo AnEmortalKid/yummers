@@ -1,6 +1,5 @@
 package com.anemortalkid.yummers.foodpreference;
 
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -52,7 +51,8 @@ public class FoodPreferenceController {
 		List<FoodPreference> foodPreferences = foodPreferenceRepository
 				.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
 		List<Associate> associatesWithBreakfast = extractAssociates(foodPreferences);
-		return ResponseFactory.respondFound(callingPath, associatesWithBreakfast);
+		return ResponseFactory.respondFound(callingPath,
+				associatesWithBreakfast);
 	}
 
 	public List<Associate> getAssociatesWithBreakfast() {
@@ -65,7 +65,8 @@ public class FoodPreferenceController {
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
 	public YummersResponseEntity<List<FoodPreference>> getAllPreferences() {
 		String callingPath = "/preferences/list";
-		return ResponseFactory.respondFound(callingPath, foodPreferenceRepository.findAll());
+		return ResponseFactory.respondFound(callingPath,
+				foodPreferenceRepository.findAll());
 	}
 
 	@RequestMapping(value = "/missing", method = RequestMethod.GET)
@@ -78,59 +79,85 @@ public class FoodPreferenceController {
 		// find all our preferences
 		List<FoodPreference> preferences = foodPreferenceRepository.findAll();
 
-		Set<String> associatesWithPreferences = preferences.parallelStream()
-				.map(foodPreference -> foodPreference.getAssociate().getAssociateId()).collect(Collectors.toSet());
+		Set<String> associatesWithPreferences = preferences
+				.parallelStream()
+				.map(foodPreference -> foodPreference.getAssociate()
+						.getAssociateId()).collect(Collectors.toSet());
 
-		List<Associate> missingPreferences = associates.parallelStream()
-				.filter(associate -> !associatesWithPreferences.contains(associate.getAssociateId()))
+		List<Associate> missingPreferences = associates
+				.parallelStream()
+				.filter(associate -> !associatesWithPreferences
+						.contains(associate.getAssociateId()))
 				.collect(Collectors.toList());
 
 		return ResponseFactory.respondOK(callingPath, missingPreferences);
 	}
 
 	/**
-	 * Public facing duh
+	 * Sets the preference on the Associate with the given ID to the preferred
+	 * preference
 	 * 
 	 * @param callingPath
+	 *            the location from which we are calling this method, a rest url
 	 * @param associateId
+	 *            the id for the associate to register a preference for
 	 * @param foodPreference
-	 * @return
-	 * @throws URISyntaxException
+	 *            the display of the associates food preference
+	 * @return a {@link FoodPreference} with the associate and the enumeration
+	 *         value for the preference
 	 */
-	public YummersResponseEntity<FoodPreference> setFoodPreference(String callingPath, String associateId,
-			String foodPreference) throws URISyntaxException {
+	public YummersResponseEntity<FoodPreference> setFoodPreference(
+			String callingPath, String associateId, String foodPreference) {
 		// Get a valid preference
-		FoodPreferenceType parsed = FoodPreferenceType.parseString(foodPreference);
+		FoodPreferenceType parsed = FoodPreferenceType
+				.parseString(foodPreference);
 		if (parsed == null) {
-			String foodPreferencesAllowed = Arrays.toString(FoodPreferenceType.values());
+			String foodPreferencesAllowed = Arrays.toString(FoodPreferenceType
+					.values());
 			return ResponseFactory.respondFail(callingPath,
-					"Invalid preferences, valid ones are: " + foodPreferencesAllowed);
+					"Invalid preferences, valid ones are: "
+							+ foodPreferencesAllowed);
 		}
 
 		// Check if the associate exists
 		Associate foundAssociate = associateRepository.findOne(associateId);
 		if (foundAssociate == null) {
-			return ResponseFactory.respondFail(callingPath, "No associate exists with associateId=" + associateId);
+			return ResponseFactory.respondFail(callingPath,
+					"No associate exists with associateId=" + associateId);
 		}
 
 		// Check to see if it exists
-		FoodPreference existing = foodPreferenceRepository.findByAssociate(foundAssociate);
+		FoodPreference existing = foodPreferenceRepository
+				.findByAssociate(foundAssociate);
 		if (existing == null) {
 			FoodPreference fp = new FoodPreference(foundAssociate, parsed);
 			foodPreferenceRepository.save(fp);
-			LOGGER.info(
-					"Created preference of " + parsed + " for associate with id " + foundAssociate.getAssociateId());
+			LOGGER.info("Created preference of " + parsed
+					+ " for associate with id "
+					+ foundAssociate.getAssociateId());
 			return ResponseFactory.respondCreated(callingPath, fp);
 		} else {
 			existing.setPreferenceType(parsed);
 			foodPreferenceRepository.save(existing);
-			LOGGER.info("Set preference to " + parsed + " for associate with id " + foundAssociate.getAssociateId());
+			LOGGER.info("Set preference to " + parsed
+					+ " for associate with id "
+					+ foundAssociate.getAssociateId());
 			return ResponseFactory.respondOK(callingPath, existing);
 		}
 	}
 
-	public static List<Associate> extractAssociates(List<FoodPreference> foodPreferences) {
-		return foodPreferences.parallelStream().map(fp -> fp.getAssociate()).collect(Collectors.toList());
+	/**
+	 * Given a list of FoodPrefereence, this method extracts the Associate
+	 * objects for each preference
+	 * 
+	 * @param foodPreferences
+	 *            a list of {@link FoodPreference} to extract associates from
+	 * @return a List of extracted {@link Associate} objects
+	 */
+	public static List<Associate> extractAssociates(
+			List<FoodPreference> foodPreferences) {
+		return foodPreferences.parallelStream().map(fp -> fp.getAssociate())
+				.collect(Collectors.toList());
 	}
 
 }

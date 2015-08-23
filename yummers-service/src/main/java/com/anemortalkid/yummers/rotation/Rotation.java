@@ -14,7 +14,6 @@ public class Rotation {
 	private String nextBreakfastStarter;
 	private String nextSnackStarter;
 	private boolean active;
-	private boolean shouldRebuild;
 
 	public Rotation() {
 		// free jason
@@ -27,14 +26,14 @@ public class Rotation {
 	 * @param nextSnackStarter
 	 * @param active
 	 */
-	public Rotation(List<String> breakfastAssociates, List<String> snackAssociates, String nextBreakfastStarter,
-			String nextSnackStarter, boolean active, boolean shouldRebuild) {
+	public Rotation(List<String> breakfastAssociates,
+			List<String> snackAssociates, String nextBreakfastStarter,
+			String nextSnackStarter, boolean active) {
 		this.breakfastAssociates = breakfastAssociates;
 		this.snackAssociates = snackAssociates;
 		this.nextBreakfastStarter = nextBreakfastStarter;
 		this.nextSnackStarter = nextSnackStarter;
 		this.active = active;
-		shouldRebuild = shouldRebuild;
 	}
 
 	public String getId() {
@@ -95,14 +94,6 @@ public class Rotation {
 		this.nextSnackStarter = nextSnackStarter;
 	}
 
-	public boolean isShouldRebuild() {
-		return shouldRebuild;
-	}
-
-	public void setShouldRebuild(boolean shouldRebuild) {
-		this.shouldRebuild = shouldRebuild;
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -118,8 +109,6 @@ public class Rotation {
 		builder.append(nextSnackStarter);
 		builder.append(", active=");
 		builder.append(active);
-		builder.append(", shouldRebuild=");
-		builder.append(shouldRebuild);
 		builder.append("]");
 		return builder.toString();
 	}

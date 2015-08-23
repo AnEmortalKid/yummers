@@ -7,9 +7,13 @@ import java.util.stream.IntStream;
 
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.anemortalkid.yummers.experiment.FridayFinder;
 
+@RestController
+@RequestMapping("/slots")
 public class SlotController {
 
 	@Autowired

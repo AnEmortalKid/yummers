@@ -15,6 +15,7 @@ import com.anemortalkid.yummers.associates.Associate;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceController;
 import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
+import com.anemortalkid.yummers.schedule.FoodEventScheduler;
 import com.anemortalkid.yummers.slots.BannedDate;
 
 @RestController
@@ -29,12 +30,16 @@ public class RotationController {
 	@Autowired
 	private FoodPreferenceController foodPreferenceController;
 
+	@Autowired
+	private FoodEventScheduler foodEventScheduler;
+
 	@RequestMapping(value = "/current", method = RequestMethod.GET)
 	public YummersResponseEntity<Rotation> currentRotation() {
 		String callingPath = "/rotations/current";
 		Rotation current = getCurrentRotation();
 		if (current == null) {
-			return ResponseFactory.respondFail(callingPath, "no current rotations available");
+			return ResponseFactory.respondFail(callingPath,
+					"no current rotations available");
 		}
 		return ResponseFactory.respondOK(callingPath, current);
 	}
@@ -45,7 +50,8 @@ public class RotationController {
 			return null;
 		}
 		if (activeRotations.size() > 1) {
-			LOGGER.error("There are more active rotations (" + activeRotations.size() + ") than there should be.");
+			LOGGER.error("There are more active rotations ("
+					+ activeRotations.size() + ") than there should be.");
 		}
 
 		Rotation current = activeRotations.get(0);
@@ -56,7 +62,8 @@ public class RotationController {
 	public YummersResponseEntity<List<Rotation>> getPastRotations() {
 		String callingPath = "/rotations/past";
 
-		List<Rotation> inactiveRotations = rotationRepository.findByActive(false);
+		List<Rotation> inactiveRotations = rotationRepository
+				.findByActive(false);
 		return ResponseFactory.respondOK(callingPath, inactiveRotations);
 	}
 
@@ -77,11 +84,15 @@ public class RotationController {
 			return true;
 		}
 
-		Set<String> breakfastAssociates = currentRotation.getBreakfastAssociates().stream().collect(Collectors.toSet());
-		Set<String> snackAssociates = currentRotation.getSnackAssociates().stream().collect(Collectors.toSet());
+		Set<String> breakfastAssociates = currentRotation
+				.getBreakfastAssociates().stream().collect(Collectors.toSet());
+		Set<String> snackAssociates = currentRotation.getSnackAssociates()
+				.stream().collect(Collectors.toSet());
 
-		List<Associate> associatesWithBreakfast = foodPreferenceController.getAssociatesWithBreakfast();
-		List<Associate> associatesWithSnack = foodPreferenceController.getAssociatesWithSnack();
+		List<Associate> associatesWithBreakfast = foodPreferenceController
+				.getAssociatesWithBreakfast();
+		List<Associate> associatesWithSnack = foodPreferenceController
+				.getAssociatesWithSnack();
 
 		// compare sizes first
 		if (breakfastAssociates.size() != associatesWithBreakfast.size()) {
@@ -93,7 +104,8 @@ public class RotationController {
 		}
 
 		// check all ids contained
-		Set<String> breakfastIds = associatesWithBreakfast.stream().map((associate) -> associate.getAssociateId())
+		Set<String> breakfastIds = associatesWithBreakfast.stream()
+				.map((associate) -> associate.getAssociateId())
 				.collect(Collectors.toSet());
 		for (String string : breakfastAssociates) {
 			if (!breakfastIds.contains(string)) {
@@ -101,7 +113,8 @@ public class RotationController {
 			}
 		}
 
-		Set<String> snackIds = associatesWithSnack.stream().map((associate) -> associate.getAssociateId())
+		Set<String> snackIds = associatesWithSnack.stream()
+				.map((associate) -> associate.getAssociateId())
 				.collect(Collectors.toSet());
 		for (String string : snackAssociates) {
 			if (!snackIds.contains(string)) {
@@ -112,4 +125,7 @@ public class RotationController {
 		return false;
 	}
 
+	public Rotation scheduleNewRotation() {
+		return foodEventScheduler.scheduleNewRotation();
+	}
 }

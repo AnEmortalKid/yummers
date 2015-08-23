@@ -2,11 +2,13 @@ package com.anemortalkid.yummers.associates;
 
 import java.net.URISyntaxException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +23,12 @@ import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 import com.google.common.base.Optional;
 
+/**
+ * Controller for Associates
+ * 
+ * @author JMonterrubio
+ *
+ */
 @RestController
 @RequestMapping("/associates")
 public class AssociateController {
@@ -36,20 +44,44 @@ public class AssociateController {
 	@Autowired
 	private FoodPreferenceController foodPreferenceController;
 
+	/**
+	 * Returns a response with a list of all the associates
+	 * 
+	 * @return a {@link YummersResponseEntity} with a list of all the associates
+	 */
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
 	public YummersResponseEntity<List<Associate>> list() {
 		String callingPath = "/associates/list";
-		return ResponseFactory.respondOK(callingPath, associateRepository.findAll());
+		return ResponseFactory.respondOK(callingPath, getAllAssociates());
 	}
 
+	/**
+	 * Returns a list of all the associates within the repository
+	 * 
+	 * @return a list of all the associates within the repository
+	 */
+	public List<Associate> getAllAssociates() {
+		return associateRepository.findAll();
+	}
+
+	/**
+	 * Registers the given Associate
+	 * 
+	 * @param associate
+	 *            the Associate to register
+	 * @return a {@link YummersResponseEntity} with the registered associate
+	 * @throws URISyntaxException
+	 */
 	@RequestMapping(value = "/register", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<Associate> register(@RequestBody Associate associate) throws URISyntaxException {
+	public YummersResponseEntity<Associate> register(
+			@RequestBody Associate associate) {
 		String callingPath = "/associates/register";
 
 		// check if existerinos
 		Optional<Associate> optionalAssociate = createIfNotExists(associate);
 		if (!optionalAssociate.isPresent()) {
-			String errorMessage = "Associate with given id = " + associate.getAssociateId() + " already existed";
+			String errorMessage = "Associate with given id = "
+					+ associate.getAssociateId() + " already existed";
 			return ResponseFactory.respondFail(callingPath, errorMessage);
 		}
 
@@ -58,51 +90,67 @@ public class AssociateController {
 		return ResponseFactory.respondCreated(callingPath, created);
 	}
 
+	/**
+	 * Registers an Associate with a given food preference
+	 * 
+	 * @param associateWithPreference
+	 *            the Associate and FoodPreference combination
+	 * @return a {@link FoodPreference} with the data for both the associate and
+	 *         the preference
+	 */
 	@RequestMapping(value = "/registerWithPreference", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<FoodPreference> registerAssociateWithPreference(
-			@RequestBody AssociateWithPreference associateWithPreference) throws URISyntaxException {
+			@RequestBody AssociateWithPreference associateWithPreference) {
 		String callingPath = "/associates/registerWithPreference";
 
 		String associateId = associateWithPreference.getAssociateId();
 
 		// check if existerinos
-		Optional<Associate> optionalAssociate = createIfNotExists(associateId, associateWithPreference.getFirstName(),
+		Optional<Associate> optionalAssociate = createIfNotExists(associateId,
+				associateWithPreference.getFirstName(),
 				associateWithPreference.getLastName());
 		if (!optionalAssociate.isPresent()) {
-			String errorMessage = "Associate with given id = " + associateId
+			String errorMessage = "Associate with given id = "
+					+ associateId
 					+ " already existed. Did you mean to use /{associateId}/setPreference ?";
 			return ResponseFactory.respondFail(callingPath, errorMessage);
 		}
 
 		// Otherwise create a preference
-		return foodPreferenceController.setFoodPreference(callingPath, associateId,
-				associateWithPreference.getFoodPreference());
-	}
-
-	public void compilePlox() {
-		System.out.println("compilerinos");
+		return foodPreferenceController.setFoodPreference(callingPath,
+				associateId, associateWithPreference.getFoodPreference());
 	}
 
 	@RequestMapping(value = "/registerMultiple", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<List<Associate>> registerMultiple(@RequestBody List<Associate> associates) {
-		// TODO: impl this
+	public YummersResponseEntity<List<Associate>> registerMultiple(
+			@RequestBody List<Associate> associates) {
 		String callingPath = "associates/registerMultiple";
-		associates.forEach(System.out::println);
-		return ResponseFactory.respondCreated(callingPath, null);
+		List<Associate> registeredAssociates = new ArrayList<Associate>();
+		List<YummersResponseEntity<Associate>> responses = new ArrayList<YummersResponseEntity<Associate>>();
+		associates.forEach(associate -> responses.add(register(associate)));
+		responses.forEach(yre -> {
+			if (yre.getStatusCode().equals(HttpStatus.CREATED))
+				registeredAssociates.add(yre.getBody());
+		});
+		return ResponseFactory
+				.respondCreated(callingPath, registeredAssociates);
 	}
 
 	@RequestMapping(value = "/{associateId}/setPreference", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<FoodPreference> setPreferenceForAssociate(
-			@PathVariable("associateId") String associateId, @RequestBody String foodPreference)
-					throws URISyntaxException {
-		String path = MessageFormat.format("/associates/{0}/setPreference", associateId);
-		return foodPreferenceController.setFoodPreference(path, associateId, foodPreference);
+			@PathVariable("associateId") String associateId,
+			@RequestBody String foodPreference) throws URISyntaxException {
+		String path = MessageFormat.format("/associates/{0}/setPreference",
+				associateId);
+		return foodPreferenceController.setFoodPreference(path, associateId,
+				foodPreference);
 	}
 
 	@RequestMapping(value = "/preferences", method = RequestMethod.GET)
 	public YummersResponseEntity<List<FoodPreference>> listAllPreferences() {
 		String callingPath = "associates/preferences";
-		return ResponseFactory.respondFound(callingPath, foodPreferenceRepository.findAll());
+		return ResponseFactory.respondFound(callingPath,
+				foodPreferenceRepository.findAll());
 	}
 
 	private Optional<Associate> createIfNotExists(Associate associate) {
@@ -119,10 +167,12 @@ public class AssociateController {
 		return associateRepository.findOne(associateId);
 	}
 
-	private Optional<Associate> createIfNotExists(String associateId, String firstName, String lastName) {
+	private Optional<Associate> createIfNotExists(String associateId,
+			String firstName, String lastName) {
 		Associate found = associateRepository.findOne(associateId);
 		if (found == null) {
-			Associate newAssociate = new Associate(associateId, firstName, lastName);
+			Associate newAssociate = new Associate(associateId, firstName,
+					lastName);
 			Associate saved = associateRepository.save(newAssociate);
 			return Optional.of(saved);
 		}
