@@ -1,12 +1,13 @@
 package com.anemortalkid.yummers.experiment;
 
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -19,9 +20,9 @@ import com.anemortalkid.yummers.foodevent.FoodEventController;
 import com.anemortalkid.yummers.foodevent.FoodEventRepository;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceController;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceRepository;
-import com.anemortalkid.yummers.responses.YummersResponseEntity;
 import com.anemortalkid.yummers.rotation.Rotation;
 import com.anemortalkid.yummers.rotation.RotationController;
+import com.anemortalkid.yummers.rotation.RotationRepository;
 import com.anemortalkid.yummers.slots.BannedDate;
 import com.anemortalkid.yummers.slots.BannedDateController;
 import com.anemortalkid.yummers.slots.BannedDateRepository;
@@ -31,6 +32,8 @@ import com.anemortalkid.yummers.slots.SlotRepository;
 @Component
 public class Simulation {
 
+	DateTimeFormatter pattern = DateTimeFormat.forPattern("dd/MM/yyyy");
+
 	@Autowired
 	private FoodPreferenceRepository foodPreferenceRepository;
 
@@ -39,6 +42,9 @@ public class Simulation {
 
 	@Autowired
 	private RotationController rotationController;
+
+	@Autowired
+	private RotationRepository rotationRepository;
 
 	@Autowired
 	private FoodEventRepository foodEventRepository;
@@ -58,6 +64,9 @@ public class Simulation {
 	@Autowired
 	private BannedDateController bannedDateController;
 
+	@Autowired
+	private BannedDateRepository bannedDateRepository;
+
 	private DateTime simulationDate = new DateTime();
 
 	private boolean setupData;
@@ -69,51 +78,45 @@ public class Simulation {
 	}
 
 	private void setupData() {
-		DateTimeFormatter pattern = DateTimeFormat.forPattern("dd/MM/yyyy");
-		bannedDateController
-				.addBannedDate(DateTime.parse("18/9/2015", pattern));
-		bannedDateController.addBannedDate(DateTime
-				.parse("24/12/2015", pattern));
-		bannedDateController.addBannedDate(DateTime
-				.parse("25/12/2015", pattern));
-		bannedDateController.addBannedDate(DateTime
-				.parse("30/12/2015", pattern));
-		bannedDateController.addBannedDate(DateTime
-				.parse("31/12/2015", pattern));
-		bannedDateController.addBannedDate(DateTime
-				.parse("01/01/2016", pattern));
 
 		// clear repos
 		associateRepository.deleteAll();
 		slotRepository.deleteAll();
 		foodEventRepository.deleteAll();
 		foodPreferenceRepository.deleteAll();
+		rotationRepository.deleteAll();
+		bannedDateRepository.deleteAll();
+
+		bannedDateController.addBannedDate(DateTime.parse("18/9/2015", pattern));
+		bannedDateController.addBannedDate(DateTime.parse("24/12/2015", pattern));
+		bannedDateController.addBannedDate(DateTime.parse("25/12/2015", pattern));
+		bannedDateController.addBannedDate(DateTime.parse("30/12/2015", pattern));
+		bannedDateController.addBannedDate(DateTime.parse("31/12/2015", pattern));
+		bannedDateController.addBannedDate(DateTime.parse("01/01/2016", pattern));
+		List<BannedDate> bannedDates = bannedDateController.getBannedDates();
+		bannedDates
+				.forEach(bannedDate -> System.out.println("banneDate=" + bannedDate.getBannedDate().toString(pattern)));
 
 		for (int i = 0; i < 8; i++) {
 			associateId++;
-			Associate ass = new Associate(associateId + "",
-					associateId + "-fn", associateId + "-ln");
+			Associate ass = new Associate(associateId + "", associateId + "-fn", associateId + "-ln");
 			associateController.register(ass);
-			foodPreferenceController.setFoodPreference("simulation",
-					associateId + "", "Breakfast");
+			foodPreferenceController.setFoodPreference("simulation", associateId + "", "Breakfast");
 		}
 
 		for (int i = 0; i < 8; i++) {
 			associateId++;
-			Associate ass = new Associate(associateId + "",
-					associateId + "-fn", associateId + "-ln");
+			Associate ass = new Associate(associateId + "", associateId + "-fn", associateId + "-ln");
 			associateController.register(ass);
-			foodPreferenceController.setFoodPreference("simulation",
-					associateId + "", "Snack");
+			foodPreferenceController.setFoodPreference("simulation", associateId + "", "Snack");
 		}
 	}
 
 	@Scheduled(fixedRate = 2000)
 	public void checkStateAndDoAction() {
-		System.out.println("Time:"
-				+ simulationDate.toString(DateTimeFormat
-						.forPattern("dd/MM/yyyy")));
-
+		System.out.println("Time:" + simulationDate.toString(DateTimeFormat.forPattern("dd/MM/yyyy")));
+		if (simulationDate.getDayOfWeek() == DateTimeConstants.FRIDAY)
+			System.out.println("FRIDAY");
 		if (!setupData) {
 			setupData();
 			setupData = true;
@@ -136,10 +139,10 @@ public class Simulation {
 
 		// check date and see if it is friday
 		if (upcomingEvent == null) {
-			// rug rog
 			System.out.println("Scheduled new rotation");
 			rotationController.scheduleNewRotation();
 			upcomingEvent = foodEventController.getUpcomingEvent();
+			System.out.println("next upcoming " + upcomingEvent.getDate().getSlotDate().toString(pattern));
 		}
 		Slot eventDate = upcomingEvent.getDate();
 		DateTime slotDate = eventDate.getSlotDate();
@@ -158,24 +161,30 @@ public class Simulation {
 
 			if (simDay == sDay) {
 				// friday
+				System.out.println("Scheduled event with breakfast=" + upcomingEvent.getBreakfastParticipants()
+						+ ", and snack=" + upcomingEvent.getSnackParticipants());
 			} else if (simDay == sDay + 1) {
 				// make event obsolete
 				System.out.println("Deactivating->" + upcomingEvent);
 				foodEventController.deactivateEvent(upcomingEvent);
 			}
 		}
-	}
 
-	public static void main(String[] args) {
-		Timer timer = new Timer();
-		Simulation simulation = new Simulation();
-		timer.schedule(new TimerTask() {
+		// generate new associates with new preferences midway through so it has
+		// to regenerate a new rotation
+		if (simMonth == 1 && simYear == 2016 && simDay == 12) {
+			System.out.println("Generating new associates, should regenerate should now be true");
+			associateId++;
+			Associate ass = new Associate(associateId + "", associateId + "-fn", associateId + "-ln");
+			associateController.register(ass);
+			foodPreferenceController.setFoodPreference("simulation", associateId + "", "Breakfast");
 
-			@Override
-			public void run() {
-				simulation.shouldUpdateSchedule();
-			}
-		}, 2000, 90000);
+			associateId++;
+			Associate ass2 = new Associate(associateId + "", associateId + "-fn", associateId + "-ln");
+			associateController.register(ass2);
+			foodPreferenceController.setFoodPreference("simulation", associateId + "", "Snack");
+			System.out.println("Should regenerate=" + rotationController.shouldRegenerate());
+		}
 	}
 
 }

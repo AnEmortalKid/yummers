@@ -15,8 +15,7 @@ public class FoodEventController {
 
 	public List<FoodEvent> saveNewEvents(List<FoodEvent> newEvents) {
 		// remove active ones first
-		List<FoodEvent> previousActive = foodEventRepository
-				.findByIsActive(true);
+		List<FoodEvent> previousActive = foodEventRepository.findByIsActive(true);
 		previousActive.forEach(foodEvent -> foodEvent.setActive(false));
 		foodEventRepository.save(previousActive);
 
@@ -38,5 +37,15 @@ public class FoodEventController {
 	public void deactivateEvent(FoodEvent upcomingEvent) {
 		upcomingEvent.setActive(false);
 		foodEventRepository.save(upcomingEvent);
+	}
+
+	public void setCalendarInviteSent(FoodEvent foodEvent, boolean inviteSent) {
+		foodEvent.setCalendarInviteSent(inviteSent);
+		foodEventRepository.save(foodEvent);
+	}
+
+	public void setReminderEmailSent(FoodEvent foodEvent, boolean sent) {
+		foodEvent.setReminderSent(sent);
+		foodEventRepository.save(foodEvent);
 	}
 }

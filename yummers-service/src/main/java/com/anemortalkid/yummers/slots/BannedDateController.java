@@ -27,7 +27,7 @@ public class BannedDateController {
 		String callingPath = BANNED + "/banDate";
 		// check if it exists
 		BannedDate bannedDate = findBannedDateFromTime(dateTime);
-		if (bannedDate != null) {
+		if (bannedDate == null) {
 			BannedDate savedDate = bannedDateRepository.save(new BannedDate(dateTime));
 			return ResponseFactory.respondCreated(callingPath, savedDate);
 		} else {
@@ -36,9 +36,13 @@ public class BannedDateController {
 	}
 
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
-	public YummersResponseEntity<List<BannedDate>> getBannedDates() {
+	public YummersResponseEntity<List<BannedDate>> bannedDates() {
 		String callingPath = BANNED + "/list";
 		return ResponseFactory.respondOK(callingPath, bannedDateRepository.findAll());
+	}
+
+	public List<BannedDate> getBannedDates() {
+		return bannedDateRepository.findAll();
 	}
 
 	@RequestMapping(value = "/checkDate", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)

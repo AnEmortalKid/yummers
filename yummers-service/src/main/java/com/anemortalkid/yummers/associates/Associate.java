@@ -66,4 +66,14 @@ public class Associate {
 		return builder.toString();
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		// TODO Auto-generated method stub
+		if (!(obj instanceof Associate)) {
+			return false;
+		}
+		Associate other = (Associate) obj;
+		return this.getAssociateId().equals(other.getAssociateId());
+	}
+
 }

@@ -1,10 +1,15 @@
 package com.anemortalkid.yummers.schedule;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.anemortalkid.yummers.associates.Associate;
@@ -12,6 +17,9 @@ import com.anemortalkid.yummers.associates.AssociateController;
 import com.anemortalkid.yummers.foodevent.FoodEvent;
 import com.anemortalkid.yummers.foodevent.FoodEventController;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceController;
+import com.anemortalkid.yummers.postoffice.CalendarInviteData;
+import com.anemortalkid.yummers.postoffice.EmailData;
+import com.anemortalkid.yummers.postoffice.PostmanController;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 import com.anemortalkid.yummers.rotation.Rotation;
 import com.anemortalkid.yummers.rotation.RotationController;
@@ -20,6 +28,16 @@ import com.anemortalkid.yummers.slots.SlotController;
 
 @Component
 public class FoodEventScheduler {
+
+	private Logger logger = LoggerFactory.getLogger(getClass());
+
+	private static final String LASTNAME_FIRSTNAME_PATTERN = "{0},{1}";
+
+	@Value("${yummers.mail.summaryText}")
+	private String summaryText;
+
+	@Value("${yummers.mail.domain}")
+	private String emailDomain;
 
 	@Autowired
 	private SlotController slotController;
@@ -36,19 +54,19 @@ public class FoodEventScheduler {
 	@Autowired
 	private FoodEventController foodEventController;
 
-	public Rotation scheduleNewRotation() {
+	@Autowired
+	private PostmanController postmanController;
+
+	public boolean canScheduleRotation() {
 		// get the preferences
-		List<Associate> breakfastAssociates = foodPreferenceController
-				.getAssociatesWithBreakfast();
-		List<Associate> snackAssociates = foodPreferenceController
-				.getAssociatesWithSnack();
+		List<Associate> breakfastAssociates = foodPreferenceController.getAssociatesWithBreakfast();
+		List<Associate> snackAssociates = foodPreferenceController.getAssociatesWithSnack();
 
 		// check conditions
 		if (breakfastAssociates.size() != snackAssociates.size()) {
-			int difference = Math.abs(breakfastAssociates.size()
-					- snackAssociates.size());
+			int difference = Math.abs(breakfastAssociates.size() - snackAssociates.size());
 			if (difference > 1) {
-				throw new IllegalArgumentException();
+				return false;
 			}
 		}
 
@@ -57,20 +75,30 @@ public class FoodEventScheduler {
 		 * rotation
 		 */
 		if (breakfastAssociates.size() < 2 || snackAssociates.size() < 2) {
-			throw new IllegalArgumentException();
+			return false;
 		}
 
+		return true;
+	}
+
+	public Rotation scheduleNewRotation() {
+		if (!canScheduleRotation()) {
+			return null;
+		}
+
+		// get the preferences
+		List<Associate> breakfastAssociates = foodPreferenceController.getAssociatesWithBreakfast();
+		List<Associate> snackAssociates = foodPreferenceController.getAssociatesWithSnack();
+
 		// conditions guaranteed - check previous rotation
-		YummersResponseEntity<Rotation> response = rotationController
-				.currentRotation();
+		YummersResponseEntity<Rotation> response = rotationController.currentRotation();
 		Rotation currentRotation = response.getBody();
 
 		List<Associate> breakfastSchedulable = new ArrayList<>();
 		List<Associate> snackSchedulable = new ArrayList<>();
 
 		// get how many we need to schedule so they're even
-		int maxSize = Math.max(breakfastAssociates.size(),
-				snackAssociates.size());
+		int maxSize = Math.max(breakfastAssociates.size(), snackAssociates.size());
 
 		// we need them to be even so they can be scheduled evenly
 		if (maxSize % 2 != 0) {
@@ -86,12 +114,14 @@ public class FoodEventScheduler {
 			String breakfastId = currentRotation.getNextBreakfastStarter();
 			String snackId = currentRotation.getNextSnackStarter();
 
-			Associate breakfastStarter = associateController
-					.findById(breakfastId);
+			Associate breakfastStarter = associateController.findById(breakfastId);
+			System.out.println("Finding breakfast associate with id=" + breakfastId + " returned=" + breakfastStarter);
 			Associate snackStarter = associateController.findById(snackId);
 
+			System.out.println("Finding snack associate with id=" + snackId + " returned=" + snackStarter);
 			breakfastIndex = breakfastAssociates.indexOf(breakfastStarter);
 			snackIndex = snackAssociates.indexOf(snackStarter);
+			System.out.println("IndexOfBreakfast=" + breakfastIndex + "indexOfSnack=" + snackIndex);
 		}
 
 		for (int i = 0; i < maxSize; i++) {
@@ -118,20 +148,16 @@ public class FoodEventScheduler {
 			snackIndex = (snackIndex + 1) % snackAssociates.size();
 		}
 
-		Associate nextBreakfastStarter = breakfastAssociates
-				.get(breakfastIndex);
+		Associate nextBreakfastStarter = breakfastAssociates.get(breakfastIndex);
 		Associate nextSnackStarter = snackAssociates.get(snackIndex);
 
 		// create new rotation and inactivate the previous one
-		Rotation rotation = new Rotation(extractIds(breakfastSchedulable),
-				extractIds(snackSchedulable),
-				nextBreakfastStarter.getAssociateId(),
-				nextSnackStarter.getAssociateId(), true);
+		Rotation rotation = new Rotation(extractIds(breakfastSchedulable), extractIds(snackSchedulable),
+				nextBreakfastStarter.getAssociateId(), nextSnackStarter.getAssociateId(), true);
 		rotationController.insertNewRotation(rotation);
 
 		// Schedule the events
-		List<FoodEvent> foodEventSchedule = createSchedule(
-				breakfastSchedulable, snackSchedulable);
+		List<FoodEvent> foodEventSchedule = createSchedule(breakfastSchedulable, snackSchedulable);
 
 		// remove all
 		foodEventController.saveNewEvents(foodEventSchedule);
@@ -140,12 +166,10 @@ public class FoodEventScheduler {
 	}
 
 	private static List<String> extractIds(List<Associate> associates) {
-		return associates.parallelStream().map(x -> x.getAssociateId())
-				.collect(Collectors.toList());
+		return associates.parallelStream().map(x -> x.getAssociateId()).collect(Collectors.toList());
 	}
 
-	private List<FoodEvent> createSchedule(List<Associate> balancedBreakfast,
-			List<Associate> balancedSnack) {
+	private List<FoodEvent> createSchedule(List<Associate> balancedBreakfast, List<Associate> balancedSnack) {
 
 		// check how many fridays we need
 		int fridaysNeeded = balancedBreakfast.size() / 2;
@@ -160,8 +184,7 @@ public class FoodEventScheduler {
 			Associate s1 = balancedSnack.get(i);
 			Associate s2 = balancedSnack.get(i + 1);
 			Slot slot = slots.remove(0);
-			FoodEvent newEvent = new FoodEvent(getAssociateIds(b1, b2),
-					getAssociateIds(s1, s2), slot);
+			FoodEvent newEvent = new FoodEvent(getAssociateIds(b1, b2), getAssociateIds(s1, s2), slot);
 			foodEvents.add(newEvent);
 			slotController.removeSlot(slot);
 		}
@@ -175,6 +198,165 @@ public class FoodEventScheduler {
 			associateIds.add(associate.getAssociateId());
 		}
 		return associateIds;
+	}
+
+	public String getUnschedulableReason() {
+		List<Associate> breakfastAssociates = foodPreferenceController.getAssociatesWithBreakfast();
+		List<Associate> snackAssociates = foodPreferenceController.getAssociatesWithSnack();
+
+		// check conditions
+		if (breakfastAssociates.size() != snackAssociates.size()) {
+			int difference = Math.abs(breakfastAssociates.size() - snackAssociates.size());
+			if (difference > 1) {
+				return "Difference between associates with breakfast preference and snack preference is > 1 .";
+			}
+		}
+
+		/*
+		 * check that at least there's 2 of each otherwise we cant's schedule a
+		 * rotation
+		 */
+		if (breakfastAssociates.size() < 2 || snackAssociates.size() < 2) {
+			return "There aren't enough breakfast or snack preferences. Required a minimum of 2 for each.";
+		}
+
+		return "No issues";
+	}
+
+	/**
+	 * 
+	 * @param activeEvents
+	 */
+	public void sendCalendarinvites(List<FoodEvent> activeEvents) {
+		// Generate the invites and mails
+		for (FoodEvent foodEvent : activeEvents) {
+			sendBreakfast(foodEvent);
+			sendSnack(foodEvent);
+			foodEventController.setCalendarInviteSent(foodEvent, true);
+		}
+	}
+
+	private void sendBreakfast(FoodEvent foodEvent) {
+		CalendarInviteData breakfastInvite = createBreakfastInvite(foodEvent);
+		String breakfastSubject = createSubject("Breakfast", foodEvent);
+		List<String> emails = foodEvent.getBreakfastParticipants().stream().map(id -> createEmailfromId(id))
+				.collect(Collectors.toList());
+
+		postmanController.sendInvite(emails, breakfastSubject, breakfastInvite);
+	}
+
+	private void sendSnack(FoodEvent foodEvent) {
+		CalendarInviteData snackInvite = createSnackfastInvite(foodEvent);
+		String snackSubject = createSubject("Snack", foodEvent);
+		List<String> emails = foodEvent.getSnackParticipants().stream().map(id -> createEmailfromId(id))
+				.collect(Collectors.toList());
+
+		postmanController.sendInvite(emails, snackSubject, snackInvite);
+	}
+
+	private String createSubject(String topic, FoodEvent foodEvent) {
+		return topic + " reminder for Food Friday on " + toDateString(foodEvent.getDate().getSlotDate());
+	}
+
+	private CalendarInviteData createCalendarInvite(DateTime startDate, DateTime endDate, String descriptionStr,
+			String locationStr) {
+		CalendarInviteData calendarInviteData = new CalendarInviteData();
+		calendarInviteData.setDateStart(startDate);
+		calendarInviteData.setDateEnd(endDate);
+		calendarInviteData.setDescription(descriptionStr);
+		calendarInviteData.setLocation(locationStr);
+		calendarInviteData.setMailto("postman@yummers-rest.com");
+		calendarInviteData.setSummary(summaryText);
+		return calendarInviteData;
+	}
+
+	private CalendarInviteData createBreakfastInvite(FoodEvent foodEvent) {
+		DateTime eventDate = foodEvent.getDate().getSlotDate();
+		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(), 8,
+				30, 0, 0);
+		DateTime endDate = startDate.plusHours(2);
+		List<String> breakfastIds = foodEvent.getBreakfastParticipants();
+		String description = getDescription(breakfastIds.get(0), breakfastIds.get(1), eventDate, "Breakfast");
+		return createCalendarInvite(startDate, endDate, description, "Aisle");
+	}
+
+	private CalendarInviteData createSnackfastInvite(FoodEvent foodEvent) {
+		DateTime eventDate = foodEvent.getDate().getSlotDate();
+		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(),
+				12, 0, 0, 0);
+		DateTime endDate = startDate.plusHours(2);
+		List<String> snackIds = foodEvent.getSnackParticipants();
+		String description = getDescription(snackIds.get(0), snackIds.get(1), eventDate, "Snacks");
+		return createCalendarInvite(startDate, endDate, description, "Aisle");
+	}
+
+	private String getDescription(String id1, String id2, DateTime eventDate, String type) {
+		return MessageFormat.format("{0} remdiner for {1} and {2} on {3} .", type, createNameFromId(id1),
+				createNameFromId(id2), toDateString(eventDate));
+	}
+
+	private String createNameFromId(String associateId) {
+		Associate associate = associateController.findById(associateId);
+		if (associate == null) {
+			logger.error("Received an associate with id = " + associateId
+					+ " to send a calendar invite. Associate does not exist in the system anymore.");
+			return "";
+		}
+		String associateFullName = MessageFormat.format(LASTNAME_FIRSTNAME_PATTERN, associate.getLastName(),
+				associate.getFirstName());
+		return associateFullName;
+	}
+
+	private String createEmailfromId(String associateId) {
+		Associate associate = associateController.findById(associateId);
+		if (associate == null) {
+			logger.error("Received an associate with id = " + associateId
+					+ " to create an email. Associate does not exist in the system anymore.");
+			return "";
+		}
+		String email = MessageFormat.format("{0}.{1}@{2}", associate.getFirstName(), associate.getLastName(),
+				emailDomain);
+		return email;
+	}
+
+	private String toDateString(DateTime dateTime) {
+		return dateTime.toString("dd/MMM/yyyy");
+	}
+
+	public void sendEmailReminder(FoodEvent upcomingEvent) {
+		EmailData breakfastEmail = createBreakfastEmail(upcomingEvent);
+		EmailData snackEmail = createSnackEmail(upcomingEvent);
+		YummersResponseEntity<Boolean> breakfastSent = postmanController.sendEmail(breakfastEmail);
+		if (breakfastSent.getBody() != null && breakfastSent.getBody().booleanValue()) {
+			logger.error("Failed to send breakfast reminders for event " + upcomingEvent);
+		}
+		YummersResponseEntity<Boolean> snackSent = postmanController.sendEmail(snackEmail);
+		if (snackSent.getBody() != null && snackSent.getBody().booleanValue()) {
+			logger.error("Failed to send snack reminders for event " + upcomingEvent);
+		}
+		foodEventController.setReminderEmailSent(upcomingEvent, true);
+	}
+
+	private EmailData createBreakfastEmail(FoodEvent foodEvent) {
+		EmailData email = new EmailData();
+		String subject = createSubject("Breakfast", foodEvent);
+		email.setSubject(subject);
+		email.setText(summaryText);
+		email.setToRecipients(createEmailList(foodEvent.getBreakfastParticipants()));
+		return email;
+	}
+
+	private EmailData createSnackEmail(FoodEvent foodEvent) {
+		EmailData email = new EmailData();
+		String subject = createSubject("Snack", foodEvent);
+		email.setSubject(subject);
+		email.setText(summaryText);
+		email.setToRecipients(createEmailList(foodEvent.getSnackParticipants()));
+		return email;
+	}
+
+	private List<String> createEmailList(List<String> associateIds) {
+		return associateIds.stream().map((id) -> createEmailfromId(id)).collect(Collectors.toList());
 	}
 
 }

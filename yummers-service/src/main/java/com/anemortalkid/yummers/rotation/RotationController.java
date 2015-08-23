@@ -38,8 +38,7 @@ public class RotationController {
 		String callingPath = "/rotations/current";
 		Rotation current = getCurrentRotation();
 		if (current == null) {
-			return ResponseFactory.respondFail(callingPath,
-					"no current rotations available");
+			return ResponseFactory.respondFail(callingPath, "no current rotations available");
 		}
 		return ResponseFactory.respondOK(callingPath, current);
 	}
@@ -50,8 +49,7 @@ public class RotationController {
 			return null;
 		}
 		if (activeRotations.size() > 1) {
-			LOGGER.error("There are more active rotations ("
-					+ activeRotations.size() + ") than there should be.");
+			LOGGER.error("There are more active rotations (" + activeRotations.size() + ") than there should be.");
 		}
 
 		Rotation current = activeRotations.get(0);
@@ -62,37 +60,30 @@ public class RotationController {
 	public YummersResponseEntity<List<Rotation>> getPastRotations() {
 		String callingPath = "/rotations/past";
 
-		List<Rotation> inactiveRotations = rotationRepository
-				.findByActive(false);
+		List<Rotation> inactiveRotations = rotationRepository.findByActive(false);
 		return ResponseFactory.respondOK(callingPath, inactiveRotations);
 	}
 
 	public void insertNewRotation(Rotation newRotation) {
-		YummersResponseEntity<Rotation> currRotation = currentRotation();
-		if (currRotation.getBody() != null) {
-			currRotation.getBody().setActive(false);
-			rotationRepository.save(currRotation.getBody());
-		} else {
-			rotationRepository.save(newRotation);
+		Rotation currRotation = getCurrentRotation();
+		if (currRotation != null) {
+			currRotation.setActive(false);
+			rotationRepository.save(currRotation);
 		}
+		rotationRepository.save(newRotation);
 	}
 
 	public boolean shouldRegenerate() {
-		// TODO: don't handle this with some boolean, do some logic based on
 		Rotation currentRotation = getCurrentRotation();
 		if (currentRotation == null) {
 			return true;
 		}
 
-		Set<String> breakfastAssociates = currentRotation
-				.getBreakfastAssociates().stream().collect(Collectors.toSet());
-		Set<String> snackAssociates = currentRotation.getSnackAssociates()
-				.stream().collect(Collectors.toSet());
+		Set<String> breakfastAssociates = currentRotation.getBreakfastAssociates().stream().collect(Collectors.toSet());
+		Set<String> snackAssociates = currentRotation.getSnackAssociates().stream().collect(Collectors.toSet());
 
-		List<Associate> associatesWithBreakfast = foodPreferenceController
-				.getAssociatesWithBreakfast();
-		List<Associate> associatesWithSnack = foodPreferenceController
-				.getAssociatesWithSnack();
+		List<Associate> associatesWithBreakfast = foodPreferenceController.getAssociatesWithBreakfast();
+		List<Associate> associatesWithSnack = foodPreferenceController.getAssociatesWithSnack();
 
 		// compare sizes first
 		if (breakfastAssociates.size() != associatesWithBreakfast.size()) {
@@ -104,8 +95,7 @@ public class RotationController {
 		}
 
 		// check all ids contained
-		Set<String> breakfastIds = associatesWithBreakfast.stream()
-				.map((associate) -> associate.getAssociateId())
+		Set<String> breakfastIds = associatesWithBreakfast.stream().map((associate) -> associate.getAssociateId())
 				.collect(Collectors.toSet());
 		for (String string : breakfastAssociates) {
 			if (!breakfastIds.contains(string)) {
@@ -113,8 +103,7 @@ public class RotationController {
 			}
 		}
 
-		Set<String> snackIds = associatesWithSnack.stream()
-				.map((associate) -> associate.getAssociateId())
+		Set<String> snackIds = associatesWithSnack.stream().map((associate) -> associate.getAssociateId())
 				.collect(Collectors.toSet());
 		for (String string : snackAssociates) {
 			if (!snackIds.contains(string)) {

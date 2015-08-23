@@ -15,6 +15,8 @@ public class FoodEvent {
 	private List<String> snackParticipants;
 	private Slot date;
 	private boolean isActive;
+	private boolean calendarInviteSent = false;
+	private boolean reminderSent = false;
 
 	public FoodEvent() {
 		// free jason
@@ -72,6 +74,22 @@ public class FoodEvent {
 		this.isActive = isActive;
 	}
 
+	public boolean isCalendarInviteSent() {
+		return calendarInviteSent;
+	}
+
+	public void setCalendarInviteSent(boolean calendarInviteSent) {
+		this.calendarInviteSent = calendarInviteSent;
+	}
+
+	public boolean isReminderSent() {
+		return reminderSent;
+	}
+
+	public void setReminderSent(boolean reminderSent) {
+		this.reminderSent = reminderSent;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -85,6 +103,10 @@ public class FoodEvent {
 		builder.append(date);
 		builder.append(", isActive=");
 		builder.append(isActive);
+		builder.append(", calendarInviteSent=");
+		builder.append(calendarInviteSent);
+		builder.append(", reminderSent=");
+		builder.append(reminderSent);
 		builder.append("]");
 		return builder.toString();
 	}

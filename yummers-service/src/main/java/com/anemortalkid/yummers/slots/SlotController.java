@@ -30,6 +30,7 @@ public class SlotController {
 				.collect(Collectors.toList());
 		if (!banned.isEmpty()) {
 			// remove the banned ones from the slots
+			System.out.println("Found some banned dates");
 			banned.forEach((slot) -> slotRepository.delete(slot));
 			slots = slotRepository.findAll();
 		}

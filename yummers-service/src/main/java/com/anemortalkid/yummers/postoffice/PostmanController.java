@@ -63,8 +63,7 @@ public class PostmanController {
 	private String password;
 
 	@RequestMapping(value = "/sendEmail", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<Boolean> sendEmail(@RequestBody EmailData mailData)
-			throws MailException, MessagingException, IOException {
+	public YummersResponseEntity<Boolean> sendEmail(@RequestBody EmailData mailData) {
 		String callingPath = "/postman/sendEmail";
 		SendableEmailData sed = new SendableEmailData(mailData);
 
