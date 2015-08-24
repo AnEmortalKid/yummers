@@ -1,15 +1,16 @@
 package com.anemortalkid.yummers.associates;
 
-import java.net.URISyntaxException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,7 +25,7 @@ import com.anemortalkid.yummers.responses.YummersResponseEntity;
 import com.google.common.base.Optional;
 
 /**
- * Controller for Associates
+ * Controller for Associates and Associate related operations
  * 
  * @author JMonterrubio
  *
@@ -74,12 +75,18 @@ public class AssociateController {
 	 * @param associate
 	 *            the Associate to register
 	 * @return a {@link YummersResponseEntity} with the registered associate
-	 * @throws URISyntaxException
 	 */
 	@RequestMapping(value = "/register", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<Associate> register(
 			@RequestBody Associate associate) {
 		String callingPath = "/associates/register";
+
+		// check if valid
+		if (!isValidAssociate(associate)) {
+			return ResponseFactory
+					.respondFail(callingPath,
+							"The given request for associate does not have all the required fields.");
+		}
 
 		// check if existerinos
 		Optional<Associate> optionalAssociate = createIfNotExists(associate);
@@ -125,29 +132,81 @@ public class AssociateController {
 				associateId, associateWithPreference.getFoodPreference());
 	}
 
+	/**
+	 * Registers multiple associates at once
+	 * 
+	 * @param associates
+	 *            the associates to register
+	 * @return a {@link YummersResponseEntity} with the List of
+	 *         {@link Associate}s that were registered
+	 */
 	@RequestMapping(value = "/registerMultiple", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<List<Associate>> registerMultiple(
 			@RequestBody List<Associate> associates) {
 		String callingPath = "associates/registerMultiple";
 		List<Associate> registeredAssociates = new ArrayList<Associate>();
+		List<Associate> associatesToRegister = associates.stream()
+				.filter(associate -> isValidAssociate(associate))
+				.collect(Collectors.toList());
+
 		List<YummersResponseEntity<Associate>> responses = new ArrayList<YummersResponseEntity<Associate>>();
-		associates.forEach(associate -> responses.add(register(associate)));
+		associatesToRegister.forEach(associate -> responses
+				.add(register(associate)));
+
 		responses.forEach(yre -> {
 			if (yre.getStatusCode().equals(HttpStatus.CREATED))
 				registeredAssociates.add(yre.getBody());
 		});
+
 		return ResponseFactory
 				.respondCreated(callingPath, registeredAssociates);
 	}
 
+	/**
+	 * Sets the preference for the associate with ID to the desired preference
+	 * 
+	 * @param associateId
+	 *            the id for the associate
+	 * @param foodPreference
+	 *            the preference for the associate
+	 * @return a {@link YummersResponseEntity} with the new
+	 *         {@link FoodPreference} for the associate
+	 */
 	@RequestMapping(value = "/{associateId}/setPreference", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<FoodPreference> setPreferenceForAssociate(
 			@PathVariable("associateId") String associateId,
-			@RequestBody String foodPreference) throws URISyntaxException {
+			@RequestBody AssociateFoodPreference associateFoodPreference) {
+		String foodPreference = associateFoodPreference.getFoodPreference();
 		String path = MessageFormat.format("/associates/{0}/setPreference",
 				associateId);
 		return foodPreferenceController.setFoodPreference(path, associateId,
 				foodPreference);
+	}
+
+	/**
+	 * Unregisters an associate with the given associate id
+	 * 
+	 * @param associateId
+	 *            the id for the {@link Associate} to unregister
+	 * @return a {@link YummersResponseEntity} with <code>true</code> if the
+	 *         associate was unregistered or a failed response with an error
+	 *         message
+	 */
+	@RequestMapping(value = "/{associateId}/unregister", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+	public YummersResponseEntity<Boolean> unregisterAssociate(
+			@PathVariable("associateId") String associateId) {
+		String callingPath = "associates/{associateId}/unregister";
+		Associate associateToUnregister = associateRepository
+				.findOne(associateId);
+
+		if (associateToUnregister != null) {
+			associateRepository.delete(associateToUnregister);
+			return ResponseFactory.respondOK(callingPath, true);
+		}
+
+		String errorMessage = "No associate with id=" + associateId
+				+ " existed to be unregistered.";
+		return ResponseFactory.respondFail(callingPath, errorMessage);
 	}
 
 	/**
@@ -183,6 +242,22 @@ public class AssociateController {
 			return Optional.of(saved);
 		}
 		return Optional.absent();
+	}
+
+	private boolean isValidAssociate(Associate associate) {
+		if (org.apache.commons.lang3.StringUtils.isBlank(associate
+				.getAssociateId())) {
+			return false;
+		}
+		if (org.apache.commons.lang3.StringUtils.isBlank(associate
+				.getFirstName())) {
+			return false;
+		}
+		if (org.apache.commons.lang3.StringUtils.isBlank(associate
+				.getLastName())) {
+			return false;
+		}
+		return true;
 	}
 
 }

@@ -1,4 +1,4 @@
-package com.anemortalkid.yummers.slots;
+package com.anemortalkid.yummers.banned;
 
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.Id;

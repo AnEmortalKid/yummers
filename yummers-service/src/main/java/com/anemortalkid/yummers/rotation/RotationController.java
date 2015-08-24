@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.anemortalkid.yummers.associates.Associate;
+import com.anemortalkid.yummers.banned.BannedDate;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceController;
 import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 import com.anemortalkid.yummers.schedule.FoodEventScheduler;
-import com.anemortalkid.yummers.slots.BannedDate;
 
 @RestController
 @RequestMapping("/rotations")
@@ -43,6 +43,14 @@ public class RotationController {
 		return ResponseFactory.respondOK(callingPath, current);
 	}
 
+	@RequestMapping(value = "/past", method = RequestMethod.GET)
+	public YummersResponseEntity<List<Rotation>> getPastRotations() {
+		String callingPath = "/rotations/past";
+	
+		List<Rotation> inactiveRotations = rotationRepository.findByActive(false);
+		return ResponseFactory.respondOK(callingPath, inactiveRotations);
+	}
+
 	public Rotation getCurrentRotation() {
 		List<Rotation> activeRotations = rotationRepository.findByActive(true);
 		if (activeRotations.isEmpty()) {
@@ -54,14 +62,6 @@ public class RotationController {
 
 		Rotation current = activeRotations.get(0);
 		return current;
-	}
-
-	@RequestMapping(value = "/past", method = RequestMethod.GET)
-	public YummersResponseEntity<List<Rotation>> getPastRotations() {
-		String callingPath = "/rotations/past";
-
-		List<Rotation> inactiveRotations = rotationRepository.findByActive(false);
-		return ResponseFactory.respondOK(callingPath, inactiveRotations);
 	}
 
 	public void insertNewRotation(Rotation newRotation) {

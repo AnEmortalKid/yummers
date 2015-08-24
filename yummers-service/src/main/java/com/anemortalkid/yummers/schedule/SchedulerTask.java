@@ -12,19 +12,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.anemortalkid.yummers.banned.BannedDateController;
 import com.anemortalkid.yummers.foodevent.FoodEvent;
 import com.anemortalkid.yummers.foodevent.FoodEventController;
 import com.anemortalkid.yummers.rotation.Rotation;
 import com.anemortalkid.yummers.rotation.RotationController;
-import com.anemortalkid.yummers.slots.BannedDateController;
 
+/**
+ * A class that contains scheduled methods that perform the continuous running
+ * of the application.
+ * 
+ * @author JMonterrubio
+ *
+ */
 @Component
 public class SchedulerTask {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
-	private DateTimeFormatter dayMonthYear = DateTimeFormat.forPattern("dd/MM/yyyy");
-	private DateTimeFormatter ddMMyyyHHmmss = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
+	private DateTimeFormatter dayMonthYear = DateTimeFormat
+			.forPattern("dd/MM/yyyy");
+	private DateTimeFormatter ddMMyyyHHmmss = DateTimeFormat
+			.forPattern("dd/MM/yyyy HH:mm:ss");
 
 	@Autowired
 	private FoodEventController foodEventController;
@@ -57,13 +66,15 @@ public class SchedulerTask {
 			Rotation newRotation = rotationController.scheduleNewRotation();
 			if (newRotation == null) {
 				// there were data issues
-				String unschedulableReason = foodEventScheduler.getUnschedulableReason();
+				String unschedulableReason = foodEventScheduler
+						.getUnschedulableReason();
 				logger.error(unschedulableReason);
 				return;
 			} else {
 				logger.info("Sending invite to participants");
 				// send food schedule calendar invite to participants
-				List<FoodEvent> activeEvents = foodEventController.getActiveEvents();
+				List<FoodEvent> activeEvents = foodEventController
+						.getActiveEvents();
 				foodEventScheduler.sendCalendarinvites(activeEvents);
 			}
 			upcomingEvent = foodEventController.getUpcomingEvent();
@@ -74,7 +85,8 @@ public class SchedulerTask {
 		int eventDay = eventDate.getDayOfMonth();
 		int eventMonth = eventDate.getMonthOfYear();
 		int eventYear = eventDate.getYear();
-		logger.info("Next upcoming event date " + eventDate.toString(dayMonthYear));
+		logger.info("Next upcoming event date "
+				+ eventDate.toString(dayMonthYear));
 
 		// check date and if we should send reminder
 		int currentDay = currentDateTime.getDayOfMonth();
@@ -92,9 +104,11 @@ public class SchedulerTask {
 					logger.info("Event day today");
 				}
 				if (currentDateTime.getDayOfWeek() == DateTimeConstants.FRIDAY) {
-					boolean isBanned = bannedDateController.isBannedDate(currentDateTime);
+					boolean isBanned = bannedDateController
+							.isBannedDate(currentDateTime);
 					if (isBanned) {
-						logger.info("Current friday is banned, date = " + currentDateTime.toString(dayMonthYear));
+						logger.info("Current friday is banned, date = "
+								+ currentDateTime.toString(dayMonthYear));
 					}
 				}
 			}

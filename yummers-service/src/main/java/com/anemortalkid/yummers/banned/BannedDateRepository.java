@@ -1,4 +1,4 @@
-package com.anemortalkid.yummers.slots;
+package com.anemortalkid.yummers.banned;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 

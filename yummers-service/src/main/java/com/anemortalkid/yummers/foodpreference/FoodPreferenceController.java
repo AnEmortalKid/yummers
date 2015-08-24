@@ -38,16 +38,6 @@ public class FoodPreferenceController {
 		return ResponseFactory.respondFound(callingPath, associatesWithSnack);
 	}
 
-	@RequestMapping(value = "/snackShitty", method = RequestMethod.GET)
-	public List<String> shittyAssociates() {
-		List<FoodPreference> foodPreferences = foodPreferenceRepository
-				.findDistinctByPreferenceType(FoodPreferenceType.SNACK);
-		List<Associate> associatesWithSnack = extractAssociates(foodPreferences);
-		List<String> ids = associatesWithSnack.stream()
-				.map(Associate::getAssociateId).collect(Collectors.toList());
-		return ids;
-	}
-
 	@RequestMapping(value = "/breakfast", method = RequestMethod.GET)
 	public YummersResponseEntity<List<Associate>> associatesWithBreakfast() {
 		String callingPath = "/foodPreferences/breakfast";
