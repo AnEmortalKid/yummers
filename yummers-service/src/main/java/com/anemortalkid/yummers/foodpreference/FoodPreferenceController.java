@@ -18,7 +18,7 @@ import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 
 @RestController
-@RequestMapping("/preferences")
+@RequestMapping("/foodPreferences")
 public class FoodPreferenceController {
 
 	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
@@ -31,47 +31,44 @@ public class FoodPreferenceController {
 
 	@RequestMapping(value = "/snack", method = RequestMethod.GET)
 	public YummersResponseEntity<List<Associate>> associatesWithSnack() {
-		String callingPath = "/preferences/snack";
+		String callingPath = "/foodPreferences/snack";
 		List<FoodPreference> foodPreferences = foodPreferenceRepository
 				.findDistinctByPreferenceType(FoodPreferenceType.SNACK);
 		List<Associate> associatesWithSnack = extractAssociates(foodPreferences);
 		return ResponseFactory.respondFound(callingPath, associatesWithSnack);
 	}
 
-	public List<Associate> getAssociatesWithSnack() {
+	@RequestMapping(value = "/snackShitty", method = RequestMethod.GET)
+	public List<String> shittyAssociates() {
 		List<FoodPreference> foodPreferences = foodPreferenceRepository
 				.findDistinctByPreferenceType(FoodPreferenceType.SNACK);
 		List<Associate> associatesWithSnack = extractAssociates(foodPreferences);
-		return associatesWithSnack;
+		List<String> ids = associatesWithSnack.stream()
+				.map(Associate::getAssociateId).collect(Collectors.toList());
+		return ids;
 	}
 
 	@RequestMapping(value = "/breakfast", method = RequestMethod.GET)
 	public YummersResponseEntity<List<Associate>> associatesWithBreakfast() {
-		String callingPath = "/preferences/breakfast";
+		String callingPath = "/foodPreferences/breakfast";
 		List<FoodPreference> foodPreferences = foodPreferenceRepository
 				.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
-		List<Associate> associatesWithBreakfast = extractAssociates(foodPreferences);
-		return ResponseFactory.respondFound(callingPath,
-				associatesWithBreakfast);
-	}
-
-	public List<Associate> getAssociatesWithBreakfast() {
-		List<FoodPreference> foodPreferences = foodPreferenceRepository
-				.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
-		List<Associate> associatesWithBreakfast = extractAssociates(foodPreferences);
-		return associatesWithBreakfast;
+		List<Associate> breakfast = foodPreferences.parallelStream()
+				.map(fp -> fp.getAssociate()).collect(Collectors.toList());
+		return ResponseFactory.respondFound(callingPath, breakfast);
 	}
 
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
 	public YummersResponseEntity<List<FoodPreference>> getAllPreferences() {
-		String callingPath = "/preferences/list";
-		return ResponseFactory.respondFound(callingPath,
-				foodPreferenceRepository.findAll());
+		String callingPath = "/foodPreferences/list";
+		List<FoodPreference> allPreferences = foodPreferenceRepository
+				.findAll();
+		return ResponseFactory.respondFound(callingPath, allPreferences);
 	}
 
 	@RequestMapping(value = "/missing", method = RequestMethod.GET)
 	public YummersResponseEntity<List<Associate>> associatesWithoutPreference() {
-		String callingPath = "/preferences/missing";
+		String callingPath = "/foodPreferences/missing";
 
 		// get all the associates
 		List<Associate> associates = associateRepository.findAll();
@@ -144,6 +141,20 @@ public class FoodPreferenceController {
 					+ foundAssociate.getAssociateId());
 			return ResponseFactory.respondOK(callingPath, existing);
 		}
+	}
+
+	public List<Associate> getAssociatesWithBreakfast() {
+		List<FoodPreference> foodPreferences = foodPreferenceRepository
+				.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
+		List<Associate> associatesWithBreakfast = extractAssociates(foodPreferences);
+		return associatesWithBreakfast;
+	}
+
+	public List<Associate> getAssociatesWithSnack() {
+		List<FoodPreference> foodPreferences = foodPreferenceRepository
+				.findDistinctByPreferenceType(FoodPreferenceType.SNACK);
+		List<Associate> associatesWithSnack = extractAssociates(foodPreferences);
+		return associatesWithSnack;
 	}
 
 	/**

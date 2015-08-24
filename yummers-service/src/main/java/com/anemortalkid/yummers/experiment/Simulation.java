@@ -87,34 +87,47 @@ public class Simulation {
 		rotationRepository.deleteAll();
 		bannedDateRepository.deleteAll();
 
-		bannedDateController.addBannedDate(DateTime.parse("18/9/2015", pattern));
-		bannedDateController.addBannedDate(DateTime.parse("24/12/2015", pattern));
-		bannedDateController.addBannedDate(DateTime.parse("25/12/2015", pattern));
-		bannedDateController.addBannedDate(DateTime.parse("30/12/2015", pattern));
-		bannedDateController.addBannedDate(DateTime.parse("31/12/2015", pattern));
-		bannedDateController.addBannedDate(DateTime.parse("01/01/2016", pattern));
+		bannedDateController
+				.addBannedDate(DateTime.parse("18/9/2015", pattern));
+		bannedDateController.addBannedDate(DateTime
+				.parse("24/12/2015", pattern));
+		bannedDateController.addBannedDate(DateTime
+				.parse("25/12/2015", pattern));
+		bannedDateController.addBannedDate(DateTime
+				.parse("30/12/2015", pattern));
+		bannedDateController.addBannedDate(DateTime
+				.parse("31/12/2015", pattern));
+		bannedDateController.addBannedDate(DateTime
+				.parse("01/01/2016", pattern));
 		List<BannedDate> bannedDates = bannedDateController.getBannedDates();
-		bannedDates
-				.forEach(bannedDate -> System.out.println("banneDate=" + bannedDate.getBannedDate().toString(pattern)));
+		bannedDates.forEach(bannedDate -> System.out.println("banneDate="
+				+ bannedDate.getBannedDate().toString(pattern)));
 
 		for (int i = 0; i < 8; i++) {
 			associateId++;
-			Associate ass = new Associate(associateId + "", associateId + "-fn", associateId + "-ln");
+			Associate ass = new Associate(associateId + "",
+					associateId + "-fn", associateId + "-ln");
 			associateController.register(ass);
-			foodPreferenceController.setFoodPreference("simulation", associateId + "", "Breakfast");
+			foodPreferenceController.setFoodPreference("simulation",
+					associateId + "", "Breakfast");
 		}
 
 		for (int i = 0; i < 8; i++) {
 			associateId++;
-			Associate ass = new Associate(associateId + "", associateId + "-fn", associateId + "-ln");
+			Associate ass = new Associate(associateId + "",
+					associateId + "-fn", associateId + "-ln");
 			associateController.register(ass);
-			foodPreferenceController.setFoodPreference("simulation", associateId + "", "Snack");
+			foodPreferenceController.setFoodPreference("simulation",
+					associateId + "", "Snack");
 		}
 	}
 
-	@Scheduled(fixedRate = 2000)
+	// XXX
+	// @Scheduled(fixedRate = 2000)
 	public void checkStateAndDoAction() {
-		System.out.println("Time:" + simulationDate.toString(DateTimeFormat.forPattern("dd/MM/yyyy")));
+		System.out.println("Time:"
+				+ simulationDate.toString(DateTimeFormat
+						.forPattern("dd/MM/yyyy")));
 		if (simulationDate.getDayOfWeek() == DateTimeConstants.FRIDAY)
 			System.out.println("FRIDAY");
 		if (!setupData) {
@@ -142,7 +155,8 @@ public class Simulation {
 			System.out.println("Scheduled new rotation");
 			rotationController.scheduleNewRotation();
 			upcomingEvent = foodEventController.getUpcomingEvent();
-			System.out.println("next upcoming " + upcomingEvent.getDate().getSlotDate().toString(pattern));
+			System.out.println("next upcoming "
+					+ upcomingEvent.getDate().getSlotDate().toString(pattern));
 		}
 		Slot eventDate = upcomingEvent.getDate();
 		DateTime slotDate = eventDate.getSlotDate();
@@ -161,8 +175,11 @@ public class Simulation {
 
 			if (simDay == sDay) {
 				// friday
-				System.out.println("Scheduled event with breakfast=" + upcomingEvent.getBreakfastParticipants()
-						+ ", and snack=" + upcomingEvent.getSnackParticipants());
+				System.out
+						.println("Scheduled event with breakfast="
+								+ upcomingEvent.getBreakfastParticipants()
+								+ ", and snack="
+								+ upcomingEvent.getSnackParticipants());
 			} else if (simDay == sDay + 1) {
 				// make event obsolete
 				System.out.println("Deactivating->" + upcomingEvent);
@@ -173,17 +190,23 @@ public class Simulation {
 		// generate new associates with new preferences midway through so it has
 		// to regenerate a new rotation
 		if (simMonth == 1 && simYear == 2016 && simDay == 12) {
-			System.out.println("Generating new associates, should regenerate should now be true");
+			System.out
+					.println("Generating new associates, should regenerate should now be true");
 			associateId++;
-			Associate ass = new Associate(associateId + "", associateId + "-fn", associateId + "-ln");
+			Associate ass = new Associate(associateId + "",
+					associateId + "-fn", associateId + "-ln");
 			associateController.register(ass);
-			foodPreferenceController.setFoodPreference("simulation", associateId + "", "Breakfast");
+			foodPreferenceController.setFoodPreference("simulation",
+					associateId + "", "Breakfast");
 
 			associateId++;
-			Associate ass2 = new Associate(associateId + "", associateId + "-fn", associateId + "-ln");
+			Associate ass2 = new Associate(associateId + "", associateId
+					+ "-fn", associateId + "-ln");
 			associateController.register(ass2);
-			foodPreferenceController.setFoodPreference("simulation", associateId + "", "Snack");
-			System.out.println("Should regenerate=" + rotationController.shouldRegenerate());
+			foodPreferenceController.setFoodPreference("simulation",
+					associateId + "", "Snack");
+			System.out.println("Should regenerate="
+					+ rotationController.shouldRegenerate());
 		}
 	}
 

@@ -1,5 +1,6 @@
 package com.anemortalkid.yummers.associates;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 
 /**
@@ -14,6 +15,9 @@ public class Associate {
 	private String associateId;
 	private String firstName;
 	private String lastName;
+
+	@Value("${yummers.mail.domain}")
+	private String domain;
 
 	public Associate() {
 		// auto json
@@ -50,7 +54,7 @@ public class Associate {
 	}
 
 	public String getEmail() {
-		return firstName + "." + lastName + "@domain.com";
+		return firstName + "." + lastName + "@" + domain;
 	}
 
 	@Override

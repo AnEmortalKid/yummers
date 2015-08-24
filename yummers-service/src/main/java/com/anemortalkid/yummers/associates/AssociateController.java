@@ -45,9 +45,10 @@ public class AssociateController {
 	private FoodPreferenceController foodPreferenceController;
 
 	/**
-	 * Returns a response with a list of all the associates
+	 * Returns a response with a list of all the {@link Associate}s
 	 * 
-	 * @return a {@link YummersResponseEntity} with a list of all the associates
+	 * @return a {@link YummersResponseEntity} with a list of all the
+	 *         {@link Associate}s
 	 */
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
 	public YummersResponseEntity<List<Associate>> list() {
@@ -56,12 +57,15 @@ public class AssociateController {
 	}
 
 	/**
-	 * Returns a list of all the associates within the repository
+	 * Returns a response with a list of all the {@link FoodPreference}s
 	 * 
-	 * @return a list of all the associates within the repository
+	 * @return a response with a list of all the {@link FoodPreference}s
 	 */
-	public List<Associate> getAllAssociates() {
-		return associateRepository.findAll();
+	@RequestMapping(value = "/preferences", method = RequestMethod.GET)
+	public YummersResponseEntity<List<FoodPreference>> listAllPreferences() {
+		String callingPath = "associates/preferences";
+		List<FoodPreference> preferences = foodPreferenceRepository.findAll();
+		return ResponseFactory.respondOK(callingPath, preferences);
 	}
 
 	/**
@@ -146,11 +150,17 @@ public class AssociateController {
 				foodPreference);
 	}
 
-	@RequestMapping(value = "/preferences", method = RequestMethod.GET)
-	public YummersResponseEntity<List<FoodPreference>> listAllPreferences() {
-		String callingPath = "associates/preferences";
-		return ResponseFactory.respondFound(callingPath,
-				foodPreferenceRepository.findAll());
+	/**
+	 * Returns a list of all the associates within the repository
+	 * 
+	 * @return a list of all the associates within the repository
+	 */
+	public List<Associate> getAllAssociates() {
+		return associateRepository.findAll();
+	}
+
+	public Associate findById(String associateId) {
+		return associateRepository.findOne(associateId);
 	}
 
 	private Optional<Associate> createIfNotExists(Associate associate) {
@@ -161,10 +171,6 @@ public class AssociateController {
 			return Optional.of(saved);
 		}
 		return Optional.absent();
-	}
-
-	public Associate findById(String associateId) {
-		return associateRepository.findOne(associateId);
 	}
 
 	private Optional<Associate> createIfNotExists(String associateId,

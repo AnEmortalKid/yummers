@@ -105,7 +105,7 @@ public class SchedulerTask {
 	/**
 	 * Check every Friday at 10:30 PM for the next upcoming event and deactivate
 	 */
-	@Scheduled(cron = "0 30 22 ? * FRI *")
+	@Scheduled(cron = "0 30 22 ? * FRI")
 	private void purgePastEvent() {
 		FoodEvent upcomingEvent = foodEventController.getUpcomingEvent();
 		if (upcomingEvent != null) {

@@ -6,19 +6,13 @@ import org.springframework.http.ResponseEntity;
 
 public class YummersResponseEntity<T> extends ResponseEntity<T> {
 
-	private String errorMessage;
-
-	public YummersResponseEntity(String errorMessage, T body, HttpStatus statusCode) {
-		super(body, statusCode);
-		this.errorMessage = errorMessage;
-	}
-
-	public YummersResponseEntity(String errorMessage, HttpHeaders headers, HttpStatus statusCode) {
+	public YummersResponseEntity(HttpHeaders headers,
+			HttpStatus statusCode) {
 		super(headers, statusCode);
-		this.errorMessage = errorMessage;
 	}
 
-	public YummersResponseEntity(T body, HttpHeaders headers, HttpStatus statusCode) {
+	public YummersResponseEntity(T body, HttpHeaders headers,
+			HttpStatus statusCode) {
 		super(body, headers, statusCode);
 	}
 
