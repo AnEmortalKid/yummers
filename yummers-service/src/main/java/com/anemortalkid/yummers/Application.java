@@ -7,11 +7,13 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.anemortalkid.yummers.accounts.Account;
+import com.anemortalkid.yummers.accounts.AccountRepository;
 import com.anemortalkid.yummers.associates.AssociateRepository;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceRepository;
-import com.anemortalkid.yummers.postoffice.EmailTestSample;
 
 @SpringBootApplication
 @EnableScheduling
@@ -27,6 +29,19 @@ public class Application implements CommandLineRunner {
 
 	public static void main(String[] args) {
 		ApplicationContext ctx = SpringApplication.run(Application.class, args);
+	}
+
+	@Bean
+	CommandLineRunner init(final AccountRepository accountRepository) {
+		return new CommandLineRunner() {
+			@Override
+			public void run(String... arg0) throws Exception {
+				Account guest = accountRepository.findByUsername("guest");
+				if (guest == null) {
+					accountRepository.save(new Account("guest", "guest", "ROLE_BASIC"));
+				}
+			}
+		};
 	}
 
 	@Override

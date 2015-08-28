@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,7 +65,7 @@ public class AssociateController {
 	@RequestMapping(value = "/preferences", method = RequestMethod.GET)
 	public YummersResponseEntity<List<FoodPreference>> listAllPreferences() {
 		String callingPath = "associates/preferences";
-		List<FoodPreference> preferences = foodPreferenceRepository.findAll();
+		List<FoodPreference> preferences = foodPreferenceController.getAllPreferences();
 		return ResponseFactory.respondOK(callingPath, preferences);
 	}
 
@@ -77,22 +77,18 @@ public class AssociateController {
 	 * @return a {@link YummersResponseEntity} with the registered associate
 	 */
 	@RequestMapping(value = "/register", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<Associate> register(
-			@RequestBody Associate associate) {
+	public YummersResponseEntity<Associate> register(@RequestBody Associate associate) {
 		String callingPath = "/associates/register";
 
 		// check if valid
 		if (!isValidAssociate(associate)) {
-			return ResponseFactory
-					.respondFail(callingPath,
-							"The given request for associate does not have all the required fields.");
+			return ResponseFactory.respondFail(callingPath, "The given request for associate does not have all the required fields.");
 		}
 
 		// check if existerinos
 		Optional<Associate> optionalAssociate = createIfNotExists(associate);
 		if (!optionalAssociate.isPresent()) {
-			String errorMessage = "Associate with given id = "
-					+ associate.getAssociateId() + " already existed";
+			String errorMessage = "Associate with given id = " + associate.getAssociateId() + " already existed";
 			return ResponseFactory.respondFail(callingPath, errorMessage);
 		}
 
@@ -110,26 +106,20 @@ public class AssociateController {
 	 *         the preference
 	 */
 	@RequestMapping(value = "/registerWithPreference", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<FoodPreference> registerAssociateWithPreference(
-			@RequestBody AssociateWithPreference associateWithPreference) {
+	public YummersResponseEntity<FoodPreference> registerAssociateWithPreference(@RequestBody AssociateWithPreference associateWithPreference) {
 		String callingPath = "/associates/registerWithPreference";
 
 		String associateId = associateWithPreference.getAssociateId();
 
 		// check if existerinos
-		Optional<Associate> optionalAssociate = createIfNotExists(associateId,
-				associateWithPreference.getFirstName(),
-				associateWithPreference.getLastName());
+		Optional<Associate> optionalAssociate = createIfNotExists(associateId, associateWithPreference.getFirstName(), associateWithPreference.getLastName());
 		if (!optionalAssociate.isPresent()) {
-			String errorMessage = "Associate with given id = "
-					+ associateId
-					+ " already existed. Did you mean to use /{associateId}/setPreference ?";
+			String errorMessage = "Associate with given id = " + associateId + " already existed. Did you mean to use /{associateId}/setPreference ?";
 			return ResponseFactory.respondFail(callingPath, errorMessage);
 		}
 
 		// Otherwise create a preference
-		return foodPreferenceController.setFoodPreference(callingPath,
-				associateId, associateWithPreference.getFoodPreference());
+		return foodPreferenceController.setFoodPreference(callingPath, associateId, associateWithPreference.getFoodPreference());
 	}
 
 	/**
@@ -141,25 +131,44 @@ public class AssociateController {
 	 *         {@link Associate}s that were registered
 	 */
 	@RequestMapping(value = "/registerMultiple", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<List<Associate>> registerMultiple(
-			@RequestBody List<Associate> associates) {
+	public YummersResponseEntity<List<Associate>> registerMultiple(@RequestBody List<Associate> associates) {
 		String callingPath = "associates/registerMultiple";
 		List<Associate> registeredAssociates = new ArrayList<Associate>();
-		List<Associate> associatesToRegister = associates.stream()
-				.filter(associate -> isValidAssociate(associate))
-				.collect(Collectors.toList());
+		List<Associate> associatesToRegister = associates.stream().filter(associate -> isValidAssociate(associate)).collect(Collectors.toList());
 
 		List<YummersResponseEntity<Associate>> responses = new ArrayList<YummersResponseEntity<Associate>>();
-		associatesToRegister.forEach(associate -> responses
-				.add(register(associate)));
+		associatesToRegister.forEach(associate -> responses.add(register(associate)));
 
 		responses.forEach(yre -> {
 			if (yre.getStatusCode().equals(HttpStatus.CREATED))
 				registeredAssociates.add(yre.getBody());
 		});
 
-		return ResponseFactory
-				.respondCreated(callingPath, registeredAssociates);
+		return ResponseFactory.respondCreated(callingPath, registeredAssociates);
+	}
+
+	/**
+	 * Retrieves the {@link FoodPreference} for a particular {@link Associate}
+	 * with the given id
+	 * 
+	 * @param associateId
+	 *            the id for the associate
+	 * @return a {@link YummersResponseEntity} with the {@link FoodPreference}
+	 *         for the associate, or failed responses if the associateId did not
+	 *         exist or the associate did not have a food preference
+	 */
+	@RequestMapping(value = "/{associateId}/foodPreference", method = RequestMethod.GET)
+	public YummersResponseEntity<FoodPreference> getPreferenceForAssociate(@PathVariable("associateId") String associateId) {
+		String callingPath = MessageFormat.format("/associates/{0}/foodPreference", associateId);
+		Associate associate = associateRepository.findOne(associateId);
+		if (associate == null) {
+			return ResponseFactory.respondFail(callingPath, "Associate with id=" + associateId + " did not exist in the system.");
+		}
+		FoodPreference foodPreference = foodPreferenceController.getFoodPreferenceForAssociate(associate);
+		if (foodPreference == null) {
+			return ResponseFactory.respondFail(callingPath, " No food preference found for associate with id=" + associateId);
+		}
+		return ResponseFactory.respondFound(callingPath, foodPreference);
 	}
 
 	/**
@@ -173,14 +182,10 @@ public class AssociateController {
 	 *         {@link FoodPreference} for the associate
 	 */
 	@RequestMapping(value = "/{associateId}/setPreference", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<FoodPreference> setPreferenceForAssociate(
-			@PathVariable("associateId") String associateId,
-			@RequestBody AssociateFoodPreference associateFoodPreference) {
+	public YummersResponseEntity<FoodPreference> setPreferenceForAssociate(@PathVariable("associateId") String associateId, @RequestBody AssociateFoodPreference associateFoodPreference) {
 		String foodPreference = associateFoodPreference.getFoodPreference();
-		String path = MessageFormat.format("/associates/{0}/setPreference",
-				associateId);
-		return foodPreferenceController.setFoodPreference(path, associateId,
-				foodPreference);
+		String path = MessageFormat.format("/associates/{0}/setPreference", associateId);
+		return foodPreferenceController.setFoodPreference(path, associateId, foodPreference);
 	}
 
 	/**
@@ -193,19 +198,16 @@ public class AssociateController {
 	 *         message
 	 */
 	@RequestMapping(value = "/{associateId}/unregister", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<Boolean> unregisterAssociate(
-			@PathVariable("associateId") String associateId) {
+	public YummersResponseEntity<Boolean> unregisterAssociate(@PathVariable("associateId") String associateId) {
 		String callingPath = "associates/{associateId}/unregister";
-		Associate associateToUnregister = associateRepository
-				.findOne(associateId);
+		Associate associateToUnregister = associateRepository.findOne(associateId);
 
 		if (associateToUnregister != null) {
 			associateRepository.delete(associateToUnregister);
 			return ResponseFactory.respondOK(callingPath, true);
 		}
 
-		String errorMessage = "No associate with id=" + associateId
-				+ " existed to be unregistered.";
+		String errorMessage = "No associate with id=" + associateId + " existed to be unregistered.";
 		return ResponseFactory.respondFail(callingPath, errorMessage);
 	}
 
@@ -218,10 +220,27 @@ public class AssociateController {
 		return associateRepository.findAll();
 	}
 
+	/**
+	 * Returns an associate with the matching associateId, or <code>null</code>
+	 * if the associate couldn't be found
+	 * 
+	 * @param associateId
+	 *            the associateId to match
+	 * @return an Associate with that Id, or <code>null</code> if that
+	 *         associateId did not match to an associate
+	 */
 	public Associate findById(String associateId) {
 		return associateRepository.findOne(associateId);
 	}
 
+	/**
+	 * Creates an associate if it does not exist in the system
+	 * 
+	 * @param associate
+	 *            the associate to create
+	 * @return an Optional of the associate that was created, or absent if the
+	 *         associate already existed
+	 */
 	private Optional<Associate> createIfNotExists(Associate associate) {
 		String associateid = associate.getAssociateId();
 		Associate found = associateRepository.findOne(associateid);
@@ -232,29 +251,44 @@ public class AssociateController {
 		return Optional.absent();
 	}
 
-	private Optional<Associate> createIfNotExists(String associateId,
-			String firstName, String lastName) {
+	/**
+	 * Creates an associate if it does not exist in the system
+	 * 
+	 * @param associate
+	 *            the associate to create
+	 * @param firstName
+	 *            the first name of the associate
+	 * @param lastName
+	 *            the last name of the associate
+	 * @return an Optional of the associate that was created, or absent if the
+	 *         associate already existed
+	 */
+	private Optional<Associate> createIfNotExists(String associateId, String firstName, String lastName) {
 		Associate found = associateRepository.findOne(associateId);
 		if (found == null) {
-			Associate newAssociate = new Associate(associateId, firstName,
-					lastName);
+			Associate newAssociate = new Associate(associateId, firstName, lastName);
 			Associate saved = associateRepository.save(newAssociate);
 			return Optional.of(saved);
 		}
 		return Optional.absent();
 	}
 
+	/**
+	 * Validates that the associate has at least the three required fields
+	 * populated
+	 * 
+	 * @param associate
+	 *            the associate to validate
+	 * @return <code>true</code> if the associate is valid, false otherwise
+	 */
 	private boolean isValidAssociate(Associate associate) {
-		if (org.apache.commons.lang3.StringUtils.isBlank(associate
-				.getAssociateId())) {
+		if (StringUtils.isBlank(associate.getAssociateId())) {
 			return false;
 		}
-		if (org.apache.commons.lang3.StringUtils.isBlank(associate
-				.getFirstName())) {
+		if (StringUtils.isBlank(associate.getFirstName())) {
 			return false;
 		}
-		if (org.apache.commons.lang3.StringUtils.isBlank(associate
-				.getLastName())) {
+		if (StringUtils.isBlank(associate.getLastName())) {
 			return false;
 		}
 		return true;

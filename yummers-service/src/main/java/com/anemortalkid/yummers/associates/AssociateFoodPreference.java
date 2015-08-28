@@ -1,5 +1,13 @@
 package com.anemortalkid.yummers.associates;
 
+/**
+ * A wrapper parameter object to be able to take ParamBody strings in the form
+ * "foodPreference":"snack". This object is purely for JSON
+ * serialization/deserialization
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class AssociateFoodPreference {
 
 	private String foodPreference;

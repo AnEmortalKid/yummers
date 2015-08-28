@@ -4,7 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 
 /**
- * Data model for an Associate
+ * Data model for an Associate, which is someone who can participate in the food
+ * friday stuff
  * 
  * @author JMonterrubio
  *
@@ -23,6 +24,16 @@ public class Associate {
 		// auto json
 	}
 
+	/**
+	 * Creates an associate with the given id, first name and last name
+	 * 
+	 * @param associateId
+	 *            the unique identifier for the associate
+	 * @param firstName
+	 *            the associate's first name
+	 * @param lastName
+	 *            the associate's last name
+	 */
 	public Associate(String associateId, String firstName, String lastName) {
 		this.associateId = associateId;
 		this.firstName = firstName;
@@ -53,6 +64,13 @@ public class Associate {
 		this.lastName = lastName;
 	}
 
+	/**
+	 * Returns an email constructed from the first and last name of the
+	 * associate
+	 * 
+	 * @return an email constructed from the first and last name of the
+	 *         associate
+	 */
 	public String getEmail() {
 		return firstName + "." + lastName + "@" + domain;
 	}
@@ -71,13 +89,46 @@ public class Associate {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((associateId == null) ? 0 : associateId.hashCode());
+		result = prime * result + ((domain == null) ? 0 : domain.hashCode());
+		result = prime * result + ((firstName == null) ? 0 : firstName.hashCode());
+		result = prime * result + ((lastName == null) ? 0 : lastName.hashCode());
+		return result;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
-		// TODO Auto-generated method stub
-		if (!(obj instanceof Associate)) {
+		if (this == obj)
+			return true;
+		if (obj == null)
 			return false;
-		}
+		if (getClass() != obj.getClass())
+			return false;
 		Associate other = (Associate) obj;
-		return this.getAssociateId().equals(other.getAssociateId());
+		if (associateId == null) {
+			if (other.associateId != null)
+				return false;
+		} else if (!associateId.equals(other.associateId))
+			return false;
+		if (domain == null) {
+			if (other.domain != null)
+				return false;
+		} else if (!domain.equals(other.domain))
+			return false;
+		if (firstName == null) {
+			if (other.firstName != null)
+				return false;
+		} else if (!firstName.equals(other.firstName))
+			return false;
+		if (lastName == null) {
+			if (other.lastName != null)
+				return false;
+		} else if (!lastName.equals(other.lastName))
+			return false;
+		return true;
 	}
 
 }

@@ -2,7 +2,7 @@ package com.anemortalkid.yummers.associates;
 
 /**
  * A load object to encapsulate the required things when registering associates
- * with preference and preferences
+ * with preference and preferences. Used for JSON serialization/deserialization
  * 
  * @author JM034719
  *
@@ -24,8 +24,7 @@ public class AssociateWithPreference {
 	 * @param lastName
 	 * @param foodPreference
 	 */
-	public AssociateWithPreference(String associateId, String firstName,
-			String lastName, String foodPreference) {
+	public AssociateWithPreference(String associateId, String firstName, String lastName, String foodPreference) {
 		this.associateId = associateId;
 		this.firstName = firstName;
 		this.lastName = lastName;
