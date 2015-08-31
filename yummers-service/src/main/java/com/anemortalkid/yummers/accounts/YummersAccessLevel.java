@@ -6,7 +6,7 @@ package com.anemortalkid.yummers.accounts;
  * @author JMonterrubio
  *
  */
-public enum AccessLevels {
+public enum YummersAccessLevel {
 
 	/**
 	 * Basically just gets

@@ -1,19 +1,14 @@
 package com.anemortalkid.yummers.postoffice;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import javax.mail.MessagingException;
-
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
-import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,20 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
-
-//TODO figure out the date time passing issue, mayhaps we want it to just be strings and yolo?
 @RestController
 @RequestMapping("/postman")
 public class PostmanController {
 
-	// TODO - calendar invite work around for now with the date?
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	private JavaMailSenderImpl sender;
 
@@ -62,81 +49,10 @@ public class PostmanController {
 	@Value("${yummers.mail.smtp.password}")
 	private String password;
 
-	@RequestMapping(value = "/sendEmail", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<Boolean> sendEmail(@RequestBody EmailData mailData) {
-		String callingPath = "/postman/sendEmail";
-		SendableEmailData sed = new SendableEmailData(mailData);
-
-		try {
-			sed.send(getSender());
-			return ResponseFactory.respondOK(callingPath, true);
-		} catch (Exception e) {
-			return ResponseFactory.respondFail(callingPath, e.getMessage());
-		}
-	}
-
-	@RequestMapping(value = "/dateTest", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public void testDate(
-			@RequestBody @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") DateTime dateTime) {
-		System.out.println("DateRec:" + dateTime);
-	}
-
-	@RequestMapping(value = "/dateTest2", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public void testDate2(@RequestBody @JsonDeserialize(using = DateTimeSerializer.class) DateTime dateTime) {
-		System.out.println("DateRec:" + dateTime);
-	}
-
-	@RequestMapping(value = "/dateTest3", method = RequestMethod.POST)
-	public void testDate3(
-			@org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") DateTime dateTime) {
-		System.out.println("DateRec3:" + dateTime);
-	}
-
-	@RequestMapping(value = "/dateTest4", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public void testDate4(DateTimeWrapper wrapper) {
-		System.out.println(wrapper.getDateTime());
-	}
-
-	@RequestMapping(value = "/sendInvite", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<Boolean> sendInvite(@RequestBody List<String> recipientEmails,
-			@RequestBody String subject, @RequestBody CalendarInviteData inviteData) {
-		String callingPath = "/postman/sendInvite";
-		SendableCalendarInvite sci = new SendableCalendarInvite(recipientEmails, subject, inviteData);
-		try {
-			sci.send(getSender());
-			return ResponseFactory.respondOK(callingPath, true);
-		} catch (Exception e) {
-			return ResponseFactory.respondFail(callingPath, e.getMessage());
-		}
-	}
-
-	@RequestMapping(value = "/sendInviteTest", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<Boolean> sendInviteTest() {
-		String callingPath = "/postman/sendInviteTest";
-		List<String> recipientEmails = new ArrayList<>();
-		recipientEmails.add("Jason.Heiting@Cerner.com");
-		recipientEmails.add("Jan.Monterrubio@Cerner.com");
-		String subject = "sketchy-invite";
-		CalendarInviteData cid = new CalendarInviteData();
-		cid.setDateEnd(new DateTime(2015, 8, 20, 19, 30));
-		cid.setDateStart(new DateTime(2015, 8, 20, 16, 30));
-		cid.setDescription("This meeting is sketchy huh");
-		cid.setLocation("Test Location");
-		cid.setMailto("postman@yummers.rest.com");
-		cid.setSummary("See a sketchy invite");
-		SendableCalendarInvite sci = new SendableCalendarInvite(recipientEmails, subject, cid);
-		try {
-			sci.send(getSender());
-			return ResponseFactory.respondOK(callingPath, true);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseFactory.respondFail(callingPath, e.getMessage());
-		}
-	}
-
 	private JavaMailSenderImpl getSender() {
 		if (sender == null) {
 			sender = new JavaMailSenderImpl();
+			logger.info("Prod mode = " + productionMode);
 			Properties properties = System.getProperties();
 			properties.put("mail.smtp.host", productionMode ? prod_smtp_host : smtp_host);
 			if (!productionMode) {
@@ -151,35 +67,59 @@ public class PostmanController {
 		return sender;
 	}
 
-	static class DateTimeSerializer extends JsonDeserializer<DateTime> {
+	@PreAuthorize("hasRole('ROLE_SUPER')")
+	@RequestMapping(value = "/sendEmail", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+	public YummersResponseEntity<Boolean> sendEmail(@RequestBody EmailData mailData) {
+		String callingPath = "/postman/sendEmail";
+		SendableEmail sed = new SendableEmail(mailData);
 
-		@Override
-		public DateTime deserialize(JsonParser jp, DeserializationContext ctxt)
-				throws IOException, JsonProcessingException {
-			DateTimeFormatter formatter = org.joda.time.format.DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-			return formatter.parseDateTime(jp.getText());
+		try {
+			sed.send(getSender());
+			return ResponseFactory.respondOK(callingPath, true);
+		} catch (Exception e) {
+			return ResponseFactory.respondFail(callingPath, e.getMessage());
+		}
+	}
+	
+	public boolean sendEmailData(EmailData emailData)
+	{
+		SendableEmail se = new SendableEmail(emailData);
+		try
+		{
+			se.send(getSender());
+			return true;
+		}
+		catch(Exception e)
+		{
+			logger.error("Failed to send email", e);
+			return false;
 		}
 	}
 
-	static class DateTimeWrapper {
-		private DateTime dateTime;
-		private String string;
-
-		public DateTime getDateTime() {
-			return dateTime;
-		}
-
-		@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-		public void setDateTime(DateTime dateTime) {
-			this.dateTime = dateTime;
-		}
-
-		public String getString() {
-			return string;
-		}
-
-		public void setString(String string) {
-			this.string = string;
+	@PreAuthorize("hasRole('ROLE_SUPER')")
+	@RequestMapping(value = "/sendInvite", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+	public YummersResponseEntity<Boolean> sendInvite(@RequestBody CalendarInviteData calendarData) {
+		String callingPath = "/postman/sendInvite";
+		SendableCalendarInvite sci = new SendableCalendarInvite(calendarData.getRecipients(),
+				calendarData.getSubject(), calendarData.getEventData());
+		System.out.println(sci);
+		try {
+			sci.send(getSender());
+			return ResponseFactory.respondOK(callingPath, true);
+		} catch (Exception e) {
+			return ResponseFactory.respondFail(callingPath, e.getMessage());
 		}
 	}
+
+	public Boolean sendCalendarInviteData(List<String> recipientEmails, String subject, EventData eventData) {
+		SendableCalendarInvite sci = new SendableCalendarInvite(recipientEmails, subject, eventData);
+		try {
+			sci.send(getSender());
+			return true;
+		} catch (Exception e) {
+			logger.error("Could not send invite", e);
+			return false;
+		}
+	}
+
 }

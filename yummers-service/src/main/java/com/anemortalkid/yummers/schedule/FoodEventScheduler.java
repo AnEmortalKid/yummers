@@ -17,7 +17,7 @@ import com.anemortalkid.yummers.associates.AssociateController;
 import com.anemortalkid.yummers.foodevent.FoodEvent;
 import com.anemortalkid.yummers.foodevent.FoodEventController;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceController;
-import com.anemortalkid.yummers.postoffice.CalendarInviteData;
+import com.anemortalkid.yummers.postoffice.EventData;
 import com.anemortalkid.yummers.postoffice.EmailData;
 import com.anemortalkid.yummers.postoffice.PostmanController;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
@@ -35,9 +35,6 @@ public class FoodEventScheduler {
 
 	@Value("${yummers.mail.summaryText}")
 	private String summaryText;
-
-	@Value("${yummers.mail.domain}")
-	private String emailDomain;
 
 	@Autowired
 	private SlotController slotController;
@@ -237,40 +234,40 @@ public class FoodEventScheduler {
 	}
 
 	private void sendBreakfast(FoodEvent foodEvent) {
-		CalendarInviteData breakfastInvite = createBreakfastInvite(foodEvent);
+		EventData breakfastInvite = createBreakfastInvite(foodEvent);
 		String breakfastSubject = createSubject("Breakfast", foodEvent);
 		List<String> emails = foodEvent.getBreakfastParticipants().stream().map(id -> createEmailfromId(id))
 				.collect(Collectors.toList());
 
-		postmanController.sendInvite(emails, breakfastSubject, breakfastInvite);
+		postmanController.sendCalendarInviteData(emails, breakfastSubject, breakfastInvite);
 	}
 
 	private void sendSnack(FoodEvent foodEvent) {
-		CalendarInviteData snackInvite = createSnackfastInvite(foodEvent);
+		EventData snackInvite = createSnackfastInvite(foodEvent);
 		String snackSubject = createSubject("Snack", foodEvent);
 		List<String> emails = foodEvent.getSnackParticipants().stream().map(id -> createEmailfromId(id))
 				.collect(Collectors.toList());
 
-		postmanController.sendInvite(emails, snackSubject, snackInvite);
+		postmanController.sendCalendarInviteData(emails, snackSubject, snackInvite);
 	}
 
 	private String createSubject(String topic, FoodEvent foodEvent) {
 		return topic + " reminder for Food Friday on " + toDateString(foodEvent.getDate().getSlotDate());
 	}
 
-	private CalendarInviteData createCalendarInvite(DateTime startDate, DateTime endDate, String descriptionStr,
+	private EventData createCalendarInvite(DateTime startDate, DateTime endDate, String descriptionStr,
 			String locationStr) {
-		CalendarInviteData calendarInviteData = new CalendarInviteData();
-		calendarInviteData.setDateStart(startDate);
-		calendarInviteData.setDateEnd(endDate);
+		EventData calendarInviteData = new EventData();
+		calendarInviteData.setDateTimeStart(startDate);
+		calendarInviteData.setDateTimeEnd(endDate);
 		calendarInviteData.setDescription(descriptionStr);
 		calendarInviteData.setLocation(locationStr);
-		calendarInviteData.setMailto("postman@yummers-rest.com");
+		calendarInviteData.setMailTo("postman@yummers-rest.com");
 		calendarInviteData.setSummary(summaryText);
 		return calendarInviteData;
 	}
 
-	private CalendarInviteData createBreakfastInvite(FoodEvent foodEvent) {
+	private EventData createBreakfastInvite(FoodEvent foodEvent) {
 		DateTime eventDate = foodEvent.getDate().getSlotDate();
 		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(), 8,
 				30, 0, 0);
@@ -280,7 +277,7 @@ public class FoodEventScheduler {
 		return createCalendarInvite(startDate, endDate, description, "Aisle");
 	}
 
-	private CalendarInviteData createSnackfastInvite(FoodEvent foodEvent) {
+	private EventData createSnackfastInvite(FoodEvent foodEvent) {
 		DateTime eventDate = foodEvent.getDate().getSlotDate();
 		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(),
 				12, 0, 0, 0);
@@ -314,9 +311,7 @@ public class FoodEventScheduler {
 					+ " to create an email. Associate does not exist in the system anymore.");
 			return "";
 		}
-		String email = MessageFormat.format("{0}.{1}@{2}", associate.getFirstName(), associate.getLastName(),
-				emailDomain);
-		return email;
+		return associate.getEmail();
 	}
 
 	private String toDateString(DateTime dateTime) {
@@ -326,12 +321,12 @@ public class FoodEventScheduler {
 	public void sendEmailReminder(FoodEvent upcomingEvent) {
 		EmailData breakfastEmail = createBreakfastEmail(upcomingEvent);
 		EmailData snackEmail = createSnackEmail(upcomingEvent);
-		YummersResponseEntity<Boolean> breakfastSent = postmanController.sendEmail(breakfastEmail);
-		if (breakfastSent.getBody() != null && breakfastSent.getBody().booleanValue()) {
+		boolean breakfastSent = postmanController.sendEmailData(breakfastEmail);
+		if (!breakfastSent) {
 			logger.error("Failed to send breakfast reminders for event " + upcomingEvent);
 		}
-		YummersResponseEntity<Boolean> snackSent = postmanController.sendEmail(snackEmail);
-		if (snackSent.getBody() != null && snackSent.getBody().booleanValue()) {
+		boolean snackSent = postmanController.sendEmailData(snackEmail);
+		if (!snackSent) {
 			logger.error("Failed to send snack reminders for event " + upcomingEvent);
 		}
 		foodEventController.setReminderEmailSent(upcomingEvent, true);
@@ -341,8 +336,8 @@ public class FoodEventScheduler {
 		EmailData email = new EmailData();
 		String subject = createSubject("Breakfast", foodEvent);
 		email.setSubject(subject);
-		email.setText(summaryText);
-		email.setToRecipients(createEmailList(foodEvent.getBreakfastParticipants()));
+		email.setContent(summaryText);
+		email.setRecipients(createEmailList(foodEvent.getBreakfastParticipants()));
 		return email;
 	}
 
@@ -350,8 +345,8 @@ public class FoodEventScheduler {
 		EmailData email = new EmailData();
 		String subject = createSubject("Snack", foodEvent);
 		email.setSubject(subject);
-		email.setText(summaryText);
-		email.setToRecipients(createEmailList(foodEvent.getSnackParticipants()));
+		email.setContent(summaryText);
+		email.setRecipients(createEmailList(foodEvent.getSnackParticipants()));
 		return email;
 	}
 

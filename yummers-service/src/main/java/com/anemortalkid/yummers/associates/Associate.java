@@ -18,7 +18,7 @@ public class Associate {
 	private String lastName;
 
 	@Value("${yummers.mail.domain}")
-	private String domain;
+	private String emailDomain;
 
 	public Associate() {
 		// auto json
@@ -66,13 +66,13 @@ public class Associate {
 
 	/**
 	 * Returns an email constructed from the first and last name of the
-	 * associate
+	 * associate and the emailDomain, ie firstName.lastName@emailDomain
 	 * 
 	 * @return an email constructed from the first and last name of the
 	 *         associate
 	 */
 	public String getEmail() {
-		return firstName + "." + lastName + "@" + domain;
+		return firstName + "." + lastName + "@" + emailDomain;
 	}
 
 	@Override
@@ -84,6 +84,8 @@ public class Associate {
 		builder.append(firstName);
 		builder.append(", lastName=");
 		builder.append(lastName);
+		builder.append(", email=");
+		builder.append(getEmail());
 		builder.append("]");
 		return builder.toString();
 	}
@@ -93,7 +95,7 @@ public class Associate {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((associateId == null) ? 0 : associateId.hashCode());
-		result = prime * result + ((domain == null) ? 0 : domain.hashCode());
+		result = prime * result + ((emailDomain == null) ? 0 : emailDomain.hashCode());
 		result = prime * result + ((firstName == null) ? 0 : firstName.hashCode());
 		result = prime * result + ((lastName == null) ? 0 : lastName.hashCode());
 		return result;
@@ -113,10 +115,10 @@ public class Associate {
 				return false;
 		} else if (!associateId.equals(other.associateId))
 			return false;
-		if (domain == null) {
-			if (other.domain != null)
+		if (emailDomain == null) {
+			if (other.emailDomain != null)
 				return false;
-		} else if (!domain.equals(other.domain))
+		} else if (!emailDomain.equals(other.emailDomain))
 			return false;
 		if (firstName == null) {
 			if (other.firstName != null)

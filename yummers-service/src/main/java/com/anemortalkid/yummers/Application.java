@@ -40,6 +40,14 @@ public class Application implements CommandLineRunner {
 				if (guest == null) {
 					accountRepository.save(new Account("guest", "guest", "ROLE_BASIC"));
 				}
+				Account superu = accountRepository.findByUsername("super");
+				if (superu == null) {
+					accountRepository.save(new Account("super", "super", "ROLE_SUPER"));
+				}
+				Account adminu = accountRepository.findByUsername("admin");
+				if (adminu == null) {
+					accountRepository.save(new Account("admin", "admin", "ROLE_ADMIN"));
+				}
 			}
 		};
 	}

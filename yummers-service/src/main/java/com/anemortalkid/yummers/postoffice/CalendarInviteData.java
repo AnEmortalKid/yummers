@@ -1,69 +1,52 @@
 package com.anemortalkid.yummers.postoffice;
 
-import org.joda.time.DateTime;
+import java.util.List;
 
-/**
- * Data object for the required fields we need when generating an
- * {@link OutlookCalendarInvite}
- * 
- * @author JM034719
- *
- */
 public class CalendarInviteData {
 
-	private String mailto;
-	private DateTime dateStart;
-	private DateTime dateEnd;
-	private String location;
-	private String description;
-	private String summary;
+	private List<String> recipients;
+	private String subject;
+	private EventData eventData;
 
-	public String getMailto() {
-		return mailto;
+	public CalendarInviteData() {
+		// free json
 	}
 
-	public void setMailto(String mailto) {
-		this.mailto = mailto;
+	public List<String> getRecipients() {
+		return recipients;
 	}
 
-	public DateTime getDateStart() {
-		return dateStart;
+	public void setRecipients(List<String> recipientEmails) {
+		this.recipients = recipientEmails;
 	}
 
-	public void setDateStart(DateTime dateStart) {
-		this.dateStart = dateStart;
+	public String getSubject() {
+		return subject;
 	}
 
-	public DateTime getDateEnd() {
-		return dateEnd;
+	public void setSubject(String subject) {
+		this.subject = subject;
 	}
 
-	public void setDateEnd(DateTime dateEnd) {
-		this.dateEnd = dateEnd;
+	public EventData getEventData() {
+		return eventData;
 	}
 
-	public String getLocation() {
-		return location;
+	public void setEventData(EventData calendarInviteData) {
+		this.eventData = calendarInviteData;
 	}
 
-	public void setLocation(String location) {
-		this.location = location;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public String getSummary() {
-		return summary;
-	}
-
-	public void setSummary(String summary) {
-		this.summary = summary;
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("CalendarData [recipientEmails=");
+		builder.append(recipients);
+		builder.append(", subject=");
+		builder.append(subject);
+		builder.append(", eventData=");
+		builder.append(eventData);
+		builder.append("]");
+		return builder.toString();
 	}
 
 }

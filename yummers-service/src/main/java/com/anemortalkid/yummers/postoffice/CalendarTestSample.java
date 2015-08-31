@@ -43,7 +43,7 @@ public class CalendarTestSample {
 		return properties;
 	}
 
-	public void sendInvite(List<String> recipients, String subject, CalendarInviteData calendarInviteData) throws MessagingException, IOException, URISyntaxException, ParseException {
+	public void sendInvite(List<String> recipients, String subject, EventData calendarInviteData) throws MessagingException, IOException, URISyntaxException, ParseException {
 		MimeMessage mimeMessage = mailSender.createMimeMessage();
 		MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
 		helper.setTo((String[]) recipients.toArray());

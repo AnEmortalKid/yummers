@@ -17,7 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import com.anemortalkid.yummers.accounts.AccessLevels;
+import com.anemortalkid.yummers.accounts.YummersAccessLevel;
 import com.anemortalkid.yummers.accounts.Account;
 import com.anemortalkid.yummers.accounts.AccountRepository;
 
@@ -53,14 +53,14 @@ public class WebSecurityConfiguration extends GlobalAuthenticationConfigurerAdap
 
 	private List<GrantedAuthority> getGrantedAuthoritiesForAccess(String accountAccess) {
 		List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-		AccessLevels highestAccess = AccessLevels.valueOf(accountAccess);
+		YummersAccessLevel highestAccess = YummersAccessLevel.valueOf(accountAccess);
 		switch (highestAccess) {
 		case ROLE_SUPER:
-			authorities.add(new SimpleGrantedAuthority(AccessLevels.ROLE_SUPER.toString()));
+			authorities.add(new SimpleGrantedAuthority(YummersAccessLevel.ROLE_SUPER.toString()));
 		case ROLE_ADMIN:
-			authorities.add(new SimpleGrantedAuthority(AccessLevels.ROLE_ADMIN.toString()));
+			authorities.add(new SimpleGrantedAuthority(YummersAccessLevel.ROLE_ADMIN.toString()));
 		case ROLE_BASIC:
-			authorities.add(new SimpleGrantedAuthority(AccessLevels.ROLE_BASIC.toString()));
+			authorities.add(new SimpleGrantedAuthority(YummersAccessLevel.ROLE_BASIC.toString()));
 			break;
 		default:
 			LOGGER.info("There is no role association for < accessLevel=\"{0}\" > ", accountAccess);

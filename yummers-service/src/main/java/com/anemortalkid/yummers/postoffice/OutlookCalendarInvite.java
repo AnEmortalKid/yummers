@@ -1,92 +1,28 @@
 package com.anemortalkid.yummers.postoffice;
 
-import java.io.IOException;
-import java.net.SocketException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.MessageFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Month;
-import java.time.chrono.IsoChronology;
-import java.time.temporal.ChronoField;
-import java.util.GregorianCalendar;
-import java.util.Properties;
-import java.util.Random;
 import java.util.UUID;
-
-import javax.activation.DataHandler;
-import javax.mail.Authenticator;
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 
 import org.elasticsearch.common.joda.time.MutableDateTime;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeFieldType;
 import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
-
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Date;
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.ParameterFactoryImpl;
-import net.fortuna.ical4j.model.ParameterList;
-import net.fortuna.ical4j.model.PropertyList;
-import net.fortuna.ical4j.model.TimeZoneRegistry;
-import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
-import net.fortuna.ical4j.model.component.VAlarm;
-import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.component.VTimeZone;
-import net.fortuna.ical4j.model.parameter.Cn;
-import net.fortuna.ical4j.model.parameter.Role;
-import net.fortuna.ical4j.model.property.Action;
-import net.fortuna.ical4j.model.property.Attendee;
-import net.fortuna.ical4j.model.property.CalScale;
-import net.fortuna.ical4j.model.property.Categories;
-import net.fortuna.ical4j.model.property.Clazz;
-import net.fortuna.ical4j.model.property.Description;
-import net.fortuna.ical4j.model.property.DtEnd;
-import net.fortuna.ical4j.model.property.DtStart;
-import net.fortuna.ical4j.model.property.Location;
-import net.fortuna.ical4j.model.property.Organizer;
-import net.fortuna.ical4j.model.property.ProdId;
-import net.fortuna.ical4j.model.property.Sequence;
-import net.fortuna.ical4j.model.property.Summary;
-import net.fortuna.ical4j.model.property.Transp;
-import net.fortuna.ical4j.model.property.Trigger;
-import net.fortuna.ical4j.model.property.Uid;
-import net.fortuna.ical4j.util.UidGenerator;
 
 /**
- * TODO: finish the calendar generation
- * 
- * TODO: convert all the dates to be parsed using that weird calendar and then
- * the string format, see wth
  * 
  * @author JMonterrubio
  *
  */
 public class OutlookCalendarInvite {
 
-	private String mailto = "janmonterrubio@gmail.com";
-	private DateTime dateStart = new DateTime();
-	private DateTime dateEnd = new DateTime();
-	private String location = "Yoloville";
-	private String description = "Description";
-	private String summary = " Summary";
+	private String mailto;
+	private DateTime dateStart;
+	private DateTime dateEnd;
+	private String location;
+	private String description;
+	private String summary;
 
-	public OutlookCalendarInvite(CalendarInviteData inviteData) {
-		this(inviteData.getMailto(), inviteData.getDateStart(), inviteData.getDateEnd(), inviteData.getLocation(),
+	public OutlookCalendarInvite(EventData inviteData) {
+		this(inviteData.getMailTo(), inviteData.getDateStart(), inviteData.getDateEnd(), inviteData.getLocation(),
 				inviteData.getDescription(), inviteData.getSummary());
 	}
 
@@ -246,7 +182,7 @@ public class OutlookCalendarInvite {
 		String endDateStr = dateToFortunaStringFormat(convertedEnd);
 		String timeStamp = dateToFortunaStringFormat(new DateTime());
 
-		// TODO: this will be database eventually
+		// TODO: this will be database eventually, hopefully
 		UUID randomUUID = UUID.randomUUID();
 		return MessageFormat.format(template, mailTo, startDateStr, endDateStr, location, randomUUID.toString(),
 				timeStamp, description, summary);
