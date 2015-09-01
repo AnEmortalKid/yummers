@@ -19,6 +19,12 @@ public class Account {
 		this.accessLevel = accessLevel;
 	}
 
+	public Account(String userName, String password, YummersAccessLevel yummersAccessLevel) {
+		this.username = userName;
+		this.password = password;
+		this.accessLevel = yummersAccessLevel.toString();
+	}
+
 	public String getId() {
 		return id;
 	}

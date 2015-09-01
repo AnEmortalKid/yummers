@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.anemortalkid.yummers.foodpreference.FoodPreference;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceController;
-import com.anemortalkid.yummers.foodpreference.FoodPreferenceRepository;
 import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 import com.google.common.base.Optional;
@@ -38,9 +38,6 @@ public class AssociateController {
 
 	@Autowired
 	private AssociateRepository associateRepository;
-
-	@Autowired
-	private FoodPreferenceRepository foodPreferenceRepository;
 
 	@Autowired
 	private FoodPreferenceController foodPreferenceController;
@@ -76,6 +73,7 @@ public class AssociateController {
 	 *            the Associate to register
 	 * @return a {@link YummersResponseEntity} with the registered associate
 	 */
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/register", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<Associate> register(@RequestBody Associate associate) {
 		String callingPath = "/associates/register";
@@ -105,6 +103,7 @@ public class AssociateController {
 	 * @return a {@link FoodPreference} with the data for both the associate and
 	 *         the preference
 	 */
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/registerWithPreference", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<FoodPreference> registerAssociateWithPreference(@RequestBody AssociateWithPreference associateWithPreference) {
 		String callingPath = "/associates/registerWithPreference";
@@ -130,6 +129,7 @@ public class AssociateController {
 	 * @return a {@link YummersResponseEntity} with the List of
 	 *         {@link Associate}s that were registered
 	 */
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/registerMultiple", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<List<Associate>> registerMultiple(@RequestBody List<Associate> associates) {
 		String callingPath = "associates/registerMultiple";
@@ -181,6 +181,7 @@ public class AssociateController {
 	 * @return a {@link YummersResponseEntity} with the new
 	 *         {@link FoodPreference} for the associate
 	 */
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/{associateId}/setPreference", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<FoodPreference> setPreferenceForAssociate(@PathVariable("associateId") String associateId, @RequestBody AssociateFoodPreference associateFoodPreference) {
 		String foodPreference = associateFoodPreference.getFoodPreference();
@@ -197,6 +198,7 @@ public class AssociateController {
 	 *         associate was unregistered or a failed response with an error
 	 *         message
 	 */
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/{associateId}/unregister", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<Boolean> unregisterAssociate(@PathVariable("associateId") String associateId) {
 		String callingPath = "associates/{associateId}/unregister";

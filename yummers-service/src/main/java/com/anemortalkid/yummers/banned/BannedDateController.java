@@ -6,6 +6,7 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +23,7 @@ public class BannedDateController {
 	@Autowired
 	private BannedDateRepository bannedDateRepository;
 
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/banDate", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<BannedDate> addBannedDate(@DateTimeFormat(pattern = "dd/MM/YYYY") DateTime dateTime) {
 		String callingPath = BANNED + "/banDate";
@@ -45,6 +47,7 @@ public class BannedDateController {
 		return bannedDateRepository.findAll();
 	}
 
+	@PreAuthorize("hasRole('ROLE_BASIC')")
 	@RequestMapping(value = "/checkDate", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public YummersResponseEntity<Boolean> checkBannedDate(@DateTimeFormat(pattern = "dd/MM/yyyy") DateTime dateTime) {
 		String callingPath = BANNED + "/checkDate";

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.anemortalkid.yummers.associates.Associate;
-import com.anemortalkid.yummers.banned.BannedDate;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceController;
 import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;

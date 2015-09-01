@@ -15,7 +15,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http.authorizeRequests().antMatchers(HttpMethod.GET, "**").access("hasRole('ROLE_BASIC')");
-		http.authorizeRequests().antMatchers(HttpMethod.POST, "**").access("hasRole('ROLE_ADMIN')");
 		http.httpBasic();
 		http.csrf().disable();
 	}
