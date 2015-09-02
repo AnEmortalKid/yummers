@@ -252,7 +252,7 @@ public class FoodEventScheduler {
 	}
 
 	private String createSubject(String topic, FoodEvent foodEvent) {
-		return topic + " reminder for Food Friday on " + toDateString(foodEvent.getDate().getSlotDate());
+		return topic + " reminder for Food Friday on " + toDateString(foodEvent.getSlot().getSlotDate());
 	}
 
 	private EventData createCalendarInvite(DateTime startDate, DateTime endDate, String descriptionStr,
@@ -268,7 +268,7 @@ public class FoodEventScheduler {
 	}
 
 	private EventData createBreakfastInvite(FoodEvent foodEvent) {
-		DateTime eventDate = foodEvent.getDate().getSlotDate();
+		DateTime eventDate = foodEvent.getSlot().getSlotDate();
 		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(), 8,
 				30, 0, 0);
 		DateTime endDate = startDate.plusHours(2);
@@ -278,7 +278,7 @@ public class FoodEventScheduler {
 	}
 
 	private EventData createSnackfastInvite(FoodEvent foodEvent) {
-		DateTime eventDate = foodEvent.getDate().getSlotDate();
+		DateTime eventDate = foodEvent.getSlot().getSlotDate();
 		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(),
 				12, 0, 0, 0);
 		DateTime endDate = startDate.plusHours(2);

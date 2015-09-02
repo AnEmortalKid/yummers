@@ -343,7 +343,7 @@ public class FoodEventSchedulerTest {
 	}
 
 	private DateTime extractDate(FoodEvent fe) {
-		return fe.getDate().getSlotDate();
+		return fe.getSlot().getSlotDate();
 	}
 
 	private void assertDateHas(DateTime dateTime, int day, int month) {
@@ -362,7 +362,7 @@ public class FoodEventSchedulerTest {
 			Assert.assertThat(snacks[i], equalTo(snackParticipants.get(i)));
 		}
 
-		assertDateHas(foodEvent.getDate().getSlotDate(), day, month);
+		assertDateHas(foodEvent.getSlot().getSlotDate(), day, month);
 	}
 
 	private void assertRotationHas(Rotation rotation, String[] breakfast, String[] snacks, String nextBreakfast,

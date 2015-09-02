@@ -206,6 +206,8 @@ public class AssociateController {
 
 		if (associateToUnregister != null) {
 			associateRepository.delete(associateToUnregister);
+			//do the food
+			foodPreferenceController.removePreferenceForAssociate(associateToUnregister);
 			return ResponseFactory.respondOK(callingPath, true);
 		}
 

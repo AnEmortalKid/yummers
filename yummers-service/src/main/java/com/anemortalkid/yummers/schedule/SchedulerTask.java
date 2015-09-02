@@ -81,7 +81,7 @@ public class SchedulerTask {
 		}
 
 		// check the date for the event
-		DateTime eventDate = upcomingEvent.getDate().getSlotDate();
+		DateTime eventDate = upcomingEvent.getSlot().getSlotDate();
 		int eventDay = eventDate.getDayOfMonth();
 		int eventMonth = eventDate.getMonthOfYear();
 		int eventYear = eventDate.getYear();

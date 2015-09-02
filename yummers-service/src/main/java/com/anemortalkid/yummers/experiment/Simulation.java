@@ -156,9 +156,9 @@ public class Simulation {
 			rotationController.scheduleNewRotation();
 			upcomingEvent = foodEventController.getUpcomingEvent();
 			System.out.println("next upcoming "
-					+ upcomingEvent.getDate().getSlotDate().toString(pattern));
+					+ upcomingEvent.getSlot().getSlotDate().toString(pattern));
 		}
-		Slot eventDate = upcomingEvent.getDate();
+		Slot eventDate = upcomingEvent.getSlot();
 		DateTime slotDate = eventDate.getSlotDate();
 
 		// check the time

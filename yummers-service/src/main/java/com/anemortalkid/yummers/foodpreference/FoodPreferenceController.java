@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.neo4j.cypher.internal.compiler.v2_1.planner.logical.steps.expand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.anemortalkid.yummers.associates.Associate;
+import com.anemortalkid.yummers.associates.AssociateController;
 import com.anemortalkid.yummers.associates.AssociateRepository;
 import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
@@ -27,12 +29,13 @@ public class FoodPreferenceController {
 	private FoodPreferenceRepository foodPreferenceRepository;
 
 	@Autowired
-	private AssociateRepository associateRepository;
+	private AssociateController associateController;
 
 	@RequestMapping(value = "/snack", method = RequestMethod.GET)
 	public YummersResponseEntity<List<Associate>> associatesWithSnack() {
 		String callingPath = "/foodPreferences/snack";
-		List<FoodPreference> foodPreferences = foodPreferenceRepository.findDistinctByPreferenceType(FoodPreferenceType.SNACK);
+		List<FoodPreference> foodPreferences = foodPreferenceRepository
+				.findDistinctByPreferenceType(FoodPreferenceType.SNACK);
 		List<Associate> associatesWithSnack = extractAssociates(foodPreferences);
 		return ResponseFactory.respondFound(callingPath, associatesWithSnack);
 	}
@@ -40,8 +43,10 @@ public class FoodPreferenceController {
 	@RequestMapping(value = "/breakfast", method = RequestMethod.GET)
 	public YummersResponseEntity<List<Associate>> associatesWithBreakfast() {
 		String callingPath = "/foodPreferences/breakfast";
-		List<FoodPreference> foodPreferences = foodPreferenceRepository.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
-		List<Associate> breakfast = foodPreferences.parallelStream().map(fp -> fp.getAssociate()).collect(Collectors.toList());
+		List<FoodPreference> foodPreferences = foodPreferenceRepository
+				.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
+		List<Associate> breakfast = foodPreferences.parallelStream().map(fp -> fp.getAssociate())
+				.collect(Collectors.toList());
 		return ResponseFactory.respondFound(callingPath, breakfast);
 	}
 
@@ -57,14 +62,17 @@ public class FoodPreferenceController {
 		String callingPath = "/foodPreferences/missing";
 
 		// get all the associates
-		List<Associate> associates = associateRepository.findAll();
+		List<Associate> associates = associateController.getAllAssociates();
 
 		// find all our preferences
 		List<FoodPreference> preferences = foodPreferenceRepository.findAll();
 
-		Set<String> associatesWithPreferences = preferences.parallelStream().map(foodPreference -> foodPreference.getAssociate().getAssociateId()).collect(Collectors.toSet());
+		Set<String> associatesWithPreferences = preferences.parallelStream()
+				.map(foodPreference -> foodPreference.getAssociate().getAssociateId()).collect(Collectors.toSet());
 
-		List<Associate> missingPreferences = associates.parallelStream().filter(associate -> !associatesWithPreferences.contains(associate.getAssociateId())).collect(Collectors.toList());
+		List<Associate> missingPreferences = associates.parallelStream()
+				.filter(associate -> !associatesWithPreferences.contains(associate.getAssociateId()))
+				.collect(Collectors.toList());
 
 		return ResponseFactory.respondOK(callingPath, missingPreferences);
 	}
@@ -82,16 +90,18 @@ public class FoodPreferenceController {
 	 * @return a {@link FoodPreference} with the associate and the enumeration
 	 *         value for the preference
 	 */
-	public YummersResponseEntity<FoodPreference> setFoodPreference(String callingPath, String associateId, String foodPreference) {
+	public YummersResponseEntity<FoodPreference> setFoodPreference(String callingPath, String associateId,
+			String foodPreference) {
 		// Get a valid preference
 		FoodPreferenceType parsed = FoodPreferenceType.parseString(foodPreference);
 		if (parsed == null) {
 			String foodPreferencesAllowed = Arrays.toString(FoodPreferenceType.values());
-			return ResponseFactory.respondFail(callingPath, "Invalid preferences, valid ones are: " + foodPreferencesAllowed);
+			return ResponseFactory.respondFail(callingPath,
+					"Invalid preferences, valid ones are: " + foodPreferencesAllowed);
 		}
 
 		// Check if the associate exists
-		Associate foundAssociate = associateRepository.findOne(associateId);
+		Associate foundAssociate = associateController.findById(associateId);
 		if (foundAssociate == null) {
 			return ResponseFactory.respondFail(callingPath, "No associate exists with associateId=" + associateId);
 		}
@@ -101,7 +111,8 @@ public class FoodPreferenceController {
 		if (existing == null) {
 			FoodPreference fp = new FoodPreference(foundAssociate, parsed);
 			foodPreferenceRepository.save(fp);
-			LOGGER.info("Created preference of " + parsed + " for associate with id " + foundAssociate.getAssociateId());
+			LOGGER.info(
+					"Created preference of " + parsed + " for associate with id " + foundAssociate.getAssociateId());
 			return ResponseFactory.respondCreated(callingPath, fp);
 		} else {
 			existing.setPreferenceType(parsed);
@@ -122,13 +133,15 @@ public class FoodPreferenceController {
 	}
 
 	public List<Associate> getAssociatesWithBreakfast() {
-		List<FoodPreference> foodPreferences = foodPreferenceRepository.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
+		List<FoodPreference> foodPreferences = foodPreferenceRepository
+				.findDistinctByPreferenceType(FoodPreferenceType.BREAKFAST);
 		List<Associate> associatesWithBreakfast = extractAssociates(foodPreferences);
 		return associatesWithBreakfast;
 	}
 
 	public List<Associate> getAssociatesWithSnack() {
-		List<FoodPreference> foodPreferences = foodPreferenceRepository.findDistinctByPreferenceType(FoodPreferenceType.SNACK);
+		List<FoodPreference> foodPreferences = foodPreferenceRepository
+				.findDistinctByPreferenceType(FoodPreferenceType.SNACK);
 		List<Associate> associatesWithSnack = extractAssociates(foodPreferences);
 		return associatesWithSnack;
 	}
@@ -147,6 +160,13 @@ public class FoodPreferenceController {
 	 */
 	public static List<Associate> extractAssociates(List<FoodPreference> foodPreferences) {
 		return foodPreferences.parallelStream().map(fp -> fp.getAssociate()).collect(Collectors.toList());
+	}
+
+	public void removePreferenceForAssociate(Associate associateToUnregister) {
+		FoodPreference existingPreference = foodPreferenceRepository.findByAssociate(associateToUnregister);
+		if (existingPreference != null) {
+			foodPreferenceRepository.delete(existingPreference);
+		}
 	}
 
 }

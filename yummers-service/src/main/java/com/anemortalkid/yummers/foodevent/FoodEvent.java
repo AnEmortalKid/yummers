@@ -13,7 +13,7 @@ public class FoodEvent {
 
 	private List<String> breakfastParticipants;
 	private List<String> snackParticipants;
-	private Slot date;
+	private Slot slot;
 	private boolean isActive;
 	private boolean calendarInviteSent = false;
 	private boolean reminderSent = false;
@@ -31,7 +31,7 @@ public class FoodEvent {
 	public FoodEvent(List<String> breakfastParticipants, List<String> snackParticipants, Slot date) {
 		this.breakfastParticipants = breakfastParticipants;
 		this.snackParticipants = snackParticipants;
-		this.date = date;
+		this.slot = date;
 	}
 
 	public String getId() {
@@ -58,12 +58,12 @@ public class FoodEvent {
 		this.snackParticipants = snackParticipants;
 	}
 
-	public Slot getDate() {
-		return date;
+	public Slot getSlot() {
+		return slot;
 	}
 
-	public void setDate(Slot date) {
-		this.date = date;
+	public void setSlot(Slot date) {
+		this.slot = date;
 	}
 
 	public boolean isActive() {
@@ -100,7 +100,7 @@ public class FoodEvent {
 		builder.append(", snackParticipants=");
 		builder.append(snackParticipants);
 		builder.append(", date=");
-		builder.append(date);
+		builder.append(slot);
 		builder.append(", isActive=");
 		builder.append(isActive);
 		builder.append(", calendarInviteSent=");

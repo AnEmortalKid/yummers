@@ -22,7 +22,7 @@ public class SlotController {
 
 	@Autowired
 	private BannedDateController bannedDateController;
-
+	
 	public List<Slot> getNextXSlots(int slotCount) {
 		List<Slot> slots = slotRepository.findAll();
 
