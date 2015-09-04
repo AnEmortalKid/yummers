@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -121,8 +122,17 @@ public class FoodEventSchedulerTest {
 		Mockito.when(slotRepository.findAll()).thenReturn(slotRepositoryData);
 		Mockito.when(slotRepository.save(Mockito.any(Slot.class)))
 				.then(DataAnswerFactory.createSaveDataAnswer(slotRepositoryData));
-		Mockito.doAnswer(DataAnswerFactory.removeDataAnswer(slotRepositoryData)).when(slotRepository)
-				.delete(Mockito.any(Slot.class));
+		Mockito.when(slotRepository.findByIsSchedulable(true)).thenReturn(
+				slotRepositoryData.stream().filter(slot -> slot.isSchedulable()).collect(Collectors.toList()));
+		Mockito.when(slotRepository.findByIsSchedulable(true)).thenAnswer(new Answer<List<Slot>>() {
+
+			@Override
+			public List<Slot> answer(InvocationOnMock invocation) throws Throwable {
+				List<Slot> active = slotRepositoryData.stream().filter(slot -> slot.isSchedulable())
+						.collect(Collectors.toList());
+				return active;
+			}
+		});
 		ReflectionTestUtils.setField(slotController, "slotRepository", slotRepository);
 		Mockito.when(slotController.getNextXSlots(Mockito.anyInt())).thenCallRealMethod();
 		Mockito.doCallRealMethod().when(slotController).removeSlot(Mockito.any(Slot.class));
@@ -166,7 +176,7 @@ public class FoodEventSchedulerTest {
 						return null;
 					}
 				});
-		Mockito.when(bannedDateController.isBannedDate(Mockito.any(DateTime.class))).thenCallRealMethod();
+		Mockito.when(bannedDateController.isBannedDate(Mockito.any(LocalDate.class))).thenCallRealMethod();
 		ReflectionTestUtils.setField(bannedDateController, "bannedDateRepository", bannedRepository);
 
 		associateCount = 0L;
@@ -178,8 +188,8 @@ public class FoodEventSchedulerTest {
 
 		// Set an arbitrary friday for the food events
 		String startFriday = "01/01/2015";
-		List<DateTime> nextFridaysFromDate = FridayFinder.getNextFridaysFromDate(startFriday, 1);
-		DateTime firstDate = nextFridaysFromDate.get(0);
+		List<LocalDate> nextFridaysFromDate = FridayFinder.getNextFridaysFromDate(startFriday, 1);
+		LocalDate firstDate = nextFridaysFromDate.get(0);
 		Slot firstSlot = new Slot(firstDate);
 		slotRepositoryData.add(firstSlot);
 
@@ -227,7 +237,7 @@ public class FoodEventSchedulerTest {
 		 * March: 6, 13, 20 27 April: 3, 10, 17, 24 May: 1, 8
 		 */
 		String marchStart = "1/3/2015";
-		List<DateTime> fridays = FridayFinder.getNextFridaysFromDate(marchStart, 10);
+		List<LocalDate> fridays = FridayFinder.getNextFridaysFromDate(marchStart, 10);
 		fridays.forEach(x -> {
 			slotRepositoryData.add(new Slot(x));
 		});
@@ -254,8 +264,8 @@ public class FoodEventSchedulerTest {
 
 		// Set an arbitrary friday for the food events
 		String startFriday = "01/01/2015";
-		List<DateTime> nextFridaysFromDate = FridayFinder.getNextFridaysFromDate(startFriday, 1);
-		DateTime firstDate = nextFridaysFromDate.get(0);
+		List<LocalDate> nextFridaysFromDate = FridayFinder.getNextFridaysFromDate(startFriday, 1);
+		LocalDate firstDate = nextFridaysFromDate.get(0);
 		Slot firstSlot = new Slot(firstDate);
 		slotRepositoryData.add(firstSlot);
 
@@ -283,8 +293,8 @@ public class FoodEventSchedulerTest {
 
 		// Set an arbitrary friday for the food events
 		String startFriday = "01/01/2015";
-		List<DateTime> nextFridaysFromDate = FridayFinder.getNextFridaysFromDate(startFriday, 1);
-		DateTime firstDate = nextFridaysFromDate.get(0);
+		List<LocalDate> nextFridaysFromDate = FridayFinder.getNextFridaysFromDate(startFriday, 1);
+		LocalDate firstDate = nextFridaysFromDate.get(0);
 		Slot firstSlot = new Slot(firstDate);
 		slotRepositoryData.add(firstSlot);
 
@@ -342,11 +352,11 @@ public class FoodEventSchedulerTest {
 		return strings;
 	}
 
-	private DateTime extractDate(FoodEvent fe) {
+	private LocalDate extractDate(FoodEvent fe) {
 		return fe.getSlot().getSlotDate();
 	}
 
-	private void assertDateHas(DateTime dateTime, int day, int month) {
+	private void assertDateHas(LocalDate dateTime, int day, int month) {
 		Assert.assertThat(day, equalTo(dateTime.getDayOfMonth()));
 		Assert.assertThat(month, equalTo(dateTime.getMonthOfYear()));
 	}

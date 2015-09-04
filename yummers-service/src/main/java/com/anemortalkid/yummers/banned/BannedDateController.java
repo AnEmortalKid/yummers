@@ -3,6 +3,7 @@ package com.anemortalkid.yummers.banned;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
@@ -25,12 +26,12 @@ public class BannedDateController {
 
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/banDate", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<BannedDate> addBannedDate(@DateTimeFormat(pattern = "dd/MM/YYYY") DateTime dateTime) {
+	public YummersResponseEntity<BannedDate> addBannedDate(@DateTimeFormat(pattern = "dd/MM/YYYY") LocalDate date) {
 		String callingPath = BANNED + "/banDate";
 		// check if it exists
-		BannedDate bannedDate = findBannedDateFromTime(dateTime);
+		BannedDate bannedDate = findBannedDate(date);
 		if (bannedDate == null) {
-			BannedDate savedDate = bannedDateRepository.save(new BannedDate(dateTime));
+			BannedDate savedDate = bannedDateRepository.save(new BannedDate(date));
 			return ResponseFactory.respondCreated(callingPath, savedDate);
 		} else {
 			return ResponseFactory.respondFound(callingPath, bannedDate);
@@ -49,19 +50,19 @@ public class BannedDateController {
 
 	@PreAuthorize("hasRole('ROLE_BASIC')")
 	@RequestMapping(value = "/checkDate", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public YummersResponseEntity<Boolean> checkBannedDate(@DateTimeFormat(pattern = "dd/MM/yyyy") DateTime dateTime) {
+	public YummersResponseEntity<Boolean> checkBannedDate(@DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate date) {
 		String callingPath = BANNED + "/checkDate";
-		return ResponseFactory.respondOK(callingPath, findBannedDateFromTime(dateTime) != null);
+		return ResponseFactory.respondOK(callingPath, findBannedDate(date) != null);
 	}
 
-	public boolean isBannedDate(@DateTimeFormat(pattern = "dd/MM/yyyy") DateTime dateTime) {
-		return findBannedDateFromTime(dateTime) != null;
+	public boolean isBannedDate(@DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate date) {
+		return findBannedDate(date) != null;
 	}
 
-	private BannedDate findBannedDateFromTime(DateTime dateTime) {
-		int day = dateTime.getDayOfMonth();
-		int month = dateTime.getMonthOfYear();
-		int year = dateTime.getYear();
+	private BannedDate findBannedDate(LocalDate date) {
+		int day = date.getDayOfMonth();
+		int month = date.getMonthOfYear();
+		int year = date.getYear();
 		return bannedDateRepository.findByYearAndMonthAndDay(year, month, day);
 	}
 

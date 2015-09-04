@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -268,7 +269,7 @@ public class FoodEventScheduler {
 	}
 
 	private EventData createBreakfastInvite(FoodEvent foodEvent) {
-		DateTime eventDate = foodEvent.getSlot().getSlotDate();
+		LocalDate eventDate = foodEvent.getSlot().getSlotDate();
 		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(), 8,
 				30, 0, 0);
 		DateTime endDate = startDate.plusHours(2);
@@ -278,7 +279,7 @@ public class FoodEventScheduler {
 	}
 
 	private EventData createSnackfastInvite(FoodEvent foodEvent) {
-		DateTime eventDate = foodEvent.getSlot().getSlotDate();
+		LocalDate eventDate = foodEvent.getSlot().getSlotDate();
 		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(),
 				12, 0, 0, 0);
 		DateTime endDate = startDate.plusHours(2);
@@ -287,7 +288,7 @@ public class FoodEventScheduler {
 		return createCalendarInvite(startDate, endDate, description, "Aisle");
 	}
 
-	private String getDescription(String id1, String id2, DateTime eventDate, String type) {
+	private String getDescription(String id1, String id2, LocalDate eventDate, String type) {
 		return MessageFormat.format("{0} remdiner for {1} and {2} on {3} .", type, createNameFromId(id1),
 				createNameFromId(id2), toDateString(eventDate));
 	}
@@ -314,8 +315,8 @@ public class FoodEventScheduler {
 		return associate.getEmail();
 	}
 
-	private String toDateString(DateTime dateTime) {
-		return dateTime.toString("dd/MMM/yyyy");
+	private String toDateString(LocalDate date) {
+		return date.toString("dd/MMM/yyyy");
 	}
 
 	public void sendEmailReminder(FoodEvent upcomingEvent) {

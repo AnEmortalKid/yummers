@@ -1,6 +1,6 @@
 package com.anemortalkid.yummers.banned;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -10,7 +10,7 @@ public class BannedDate {
 	private String id;
 
 	@DateTimeFormat(pattern = "dd/MM/YYYY")
-	private DateTime bannedDate;
+	private LocalDate bannedDate;
 
 	private int year;
 	private int month;
@@ -23,7 +23,7 @@ public class BannedDate {
 	/**
 	 * @param bannedDate
 	 */
-	public BannedDate(DateTime bannedDate) {
+	public BannedDate(LocalDate bannedDate) {
 		this.bannedDate = bannedDate;
 		this.day = bannedDate.getDayOfMonth();
 		this.month = bannedDate.getMonthOfYear();
@@ -38,12 +38,12 @@ public class BannedDate {
 		this.id = id;
 	}
 
-	public DateTime getBannedDate() {
+	public LocalDate getBannedDate() {
 		return bannedDate;
 	}
 
 	@DateTimeFormat(pattern = "dd/MM/YYYY")
-	public void setBannedDate(DateTime bannedDate) {
+	public void setBannedDate(LocalDate bannedDate) {
 		this.bannedDate = bannedDate;
 	}
 

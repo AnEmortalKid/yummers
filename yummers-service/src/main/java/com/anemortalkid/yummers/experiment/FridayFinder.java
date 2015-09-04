@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -21,10 +22,10 @@ public class FridayFinder {
 		return getFridays(startDateTime, endDateTime);
 	}
 
-	public static List<DateTime> getNextFridaysFromDate(DateTime dateTime, int fridaysNeeded) {
-		List<DateTime> fridays = new ArrayList<>();
+	public static List<LocalDate> getNextFridaysFromDate(LocalDate date, int fridaysNeeded) {
+		List<LocalDate> fridays = new ArrayList<>();
 
-		DateTime startDateTime = dateTime.plusDays(1);
+		LocalDate startDateTime = date.plusDays(1);
 		int fridaysFound = 0;
 		boolean reachedAFriday = false;
 		// add the
@@ -60,10 +61,9 @@ public class FridayFinder {
 		return fridays;
 	}
 
-	public static List<DateTime> getNextFridaysFromDate(String dateString, int fridaysNeeded) {
-		// TODO Auto-generated method stub
+	public static List<LocalDate> getNextFridaysFromDate(String dateString, int fridaysNeeded) {
 		DateTime dateTime = DateTime.parse(dateString, DATE_PATTERN);
-		return getNextFridaysFromDate(dateTime, fridaysNeeded);
+		return getNextFridaysFromDate(dateTime.toLocalDate(), fridaysNeeded);
 	}
 
 }

@@ -3,6 +3,7 @@ package com.anemortalkid.yummers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,6 +29,12 @@ public class Application implements CommandLineRunner {
 
 	private final Logger LOGGER = LoggerFactory.getLogger(Application.class);
 
+	@Value("${yummers.prod.super.user}")
+	private String superUser;
+
+	@Value("${yummers.prod.super.password}")
+	private String superPassword;
+
 	public static void main(String[] args) {
 		ApplicationContext ctx = SpringApplication.run(Application.class, args);
 	}
@@ -40,6 +47,16 @@ public class Application implements CommandLineRunner {
 				Account guest = accountRepository.findByUsername("guest");
 				if (guest == null) {
 					accountRepository.save(new Account("guest", "guest", "ROLE_BASIC"));
+				}
+
+				// for prod launching so local testers can have a super account
+				// and test the api
+				if (superUser != null) {
+					Account superUserAcct = accountRepository.findByUsername(superUser);
+					if (superUserAcct == null) {
+						accountRepository.save(new Account(superUser, superPassword == null ? superUser : superPassword,
+								"ROLE_SUPER"));
+					}
 				}
 			}
 		};

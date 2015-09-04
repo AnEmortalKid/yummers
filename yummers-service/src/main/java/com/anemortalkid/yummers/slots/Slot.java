@@ -1,14 +1,16 @@
 package com.anemortalkid.yummers.slots;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.springframework.data.annotation.Id;
 
 public class Slot {
-
 	@Id
 	private String id;
-	
-	private DateTime slotDate;
+
+	private LocalDate slotDate;
+
+	private boolean isSchedulable;
 
 	public Slot() {
 		// free json
@@ -17,15 +19,16 @@ public class Slot {
 	/**
 	 * @param slotDate
 	 */
-	public Slot(DateTime slotDate) {
+	public Slot(LocalDate slotDate) {
 		this.slotDate = slotDate;
+		isSchedulable = true;
 	}
 
-	public DateTime getSlotDate() {
+	public LocalDate getSlotDate() {
 		return slotDate;
 	}
 
-	public void setSlotDate(DateTime slotDate) {
+	public void setSlotDate(LocalDate slotDate) {
 		this.slotDate = slotDate;
 	}
 
@@ -37,6 +40,14 @@ public class Slot {
 		this.id = id;
 	}
 
+	public boolean isSchedulable() {
+		return isSchedulable;
+	}
+
+	public void setSchedulable(boolean isSchedulable) {
+		this.isSchedulable = isSchedulable;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -44,6 +55,8 @@ public class Slot {
 		builder.append(id);
 		builder.append(", slotDate=");
 		builder.append(slotDate);
+		builder.append(", isSchedulable=");
+		builder.append(isSchedulable);
 		builder.append("]");
 		return builder.toString();
 	}

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -30,10 +31,8 @@ public class SchedulerTask {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
-	private DateTimeFormatter dayMonthYear = DateTimeFormat
-			.forPattern("dd/MM/yyyy");
-	private DateTimeFormatter ddMMyyyHHmmss = DateTimeFormat
-			.forPattern("dd/MM/yyyy HH:mm:ss");
+	private DateTimeFormatter dayMonthYear = DateTimeFormat.forPattern("dd/MM/yyyy");
+	private DateTimeFormatter ddMMyyyHHmmss = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
 
 	@Autowired
 	private FoodEventController foodEventController;
@@ -58,6 +57,7 @@ public class SchedulerTask {
 		// check what day we are in
 		DateTime currentDateTime = new DateTime();
 		logger.info("Current date " + currentDateTime.toString(ddMMyyyHHmmss));
+		LocalDate currentDate = currentDateTime.toLocalDate();
 
 		// get upcoming event or create it
 		FoodEvent upcomingEvent = foodEventController.getUpcomingEvent();
@@ -66,27 +66,24 @@ public class SchedulerTask {
 			Rotation newRotation = rotationController.scheduleNewRotation();
 			if (newRotation == null) {
 				// there were data issues
-				String unschedulableReason = foodEventScheduler
-						.getUnschedulableReason();
+				String unschedulableReason = foodEventScheduler.getUnschedulableReason();
 				logger.error(unschedulableReason);
 				return;
 			} else {
 				logger.info("Sending invite to participants");
 				// send food schedule calendar invite to participants
-				List<FoodEvent> activeEvents = foodEventController
-						.getActiveEvents();
+				List<FoodEvent> activeEvents = foodEventController.getActiveEvents();
 				foodEventScheduler.sendCalendarinvites(activeEvents);
 			}
 			upcomingEvent = foodEventController.getUpcomingEvent();
 		}
 
 		// check the date for the event
-		DateTime eventDate = upcomingEvent.getSlot().getSlotDate();
+		LocalDate eventDate = upcomingEvent.getSlot().getSlotDate();
 		int eventDay = eventDate.getDayOfMonth();
 		int eventMonth = eventDate.getMonthOfYear();
 		int eventYear = eventDate.getYear();
-		logger.info("Next upcoming event date "
-				+ eventDate.toString(dayMonthYear));
+		logger.info("Next upcoming event date " + eventDate.toString(dayMonthYear));
 
 		// check date and if we should send reminder
 		int currentDay = currentDateTime.getDayOfMonth();
@@ -104,11 +101,9 @@ public class SchedulerTask {
 					logger.info("Event day today");
 				}
 				if (currentDateTime.getDayOfWeek() == DateTimeConstants.FRIDAY) {
-					boolean isBanned = bannedDateController
-							.isBannedDate(currentDateTime);
+					boolean isBanned = bannedDateController.isBannedDate(currentDate);
 					if (isBanned) {
-						logger.info("Current friday is banned, date = "
-								+ currentDateTime.toString(dayMonthYear));
+						logger.info("Current friday is banned, date = " + currentDateTime.toString(dayMonthYear));
 					}
 				}
 			}

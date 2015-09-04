@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,9 +23,9 @@ public class SlotController {
 
 	@Autowired
 	private BannedDateController bannedDateController;
-	
+
 	public List<Slot> getNextXSlots(int slotCount) {
-		List<Slot> slots = slotRepository.findAll();
+		List<Slot> slots = slotRepository.findByIsSchedulable(true);
 
 		// remove the banned ones
 		List<Slot> banned = slots.stream().filter((slot) -> bannedDateController.isBannedDate(slot.getSlotDate()))
@@ -32,8 +33,11 @@ public class SlotController {
 		if (!banned.isEmpty()) {
 			// remove the banned ones from the slots
 			System.out.println("Found some banned dates");
-			banned.forEach((slot) -> slotRepository.delete(slot));
-			slots = slotRepository.findAll();
+			banned.forEach((slot) -> {
+				slot.setSchedulable(false);
+				slotRepository.save(slot);
+			});
+			slots = slotRepository.findByIsSchedulable(true);
 		}
 
 		if (slots.size() < slotCount) {
@@ -44,37 +48,41 @@ public class SlotController {
 			fridaysToRequest++;
 
 			// get last friday available
-			DateTime lastSlotDate = null;
+			LocalDate lastSlotDate = null;
 			if (slots.isEmpty()) {
 				// well we are scheduling so get the time here
-				lastSlotDate = new DateTime();
+				DateTime instant = new DateTime();
+				lastSlotDate = instant.toLocalDate();
 			} else {
 				Slot lastSlot = slots.get(slots.size() - 1);
 				lastSlotDate = lastSlot.getSlotDate();
 			}
-			List<DateTime> newFridays = getNextSchedulableFridays(lastSlotDate, fridaysToRequest);
+			List<LocalDate> newFridays = getNextSchedulableFridays(lastSlotDate, fridaysToRequest);
 
 			// insert them slots
 			newFridays.forEach(x -> slotRepository.save(new Slot(x)));
-			slots = slotRepository.findAll();
+			slots = slotRepository.findByIsSchedulable(true);
 		}
 
 		// add them to a list and delete them from the slots
 		List<Slot> returnable = new ArrayList<Slot>();
 		for (int i = 0; i < slotCount; i++) {
-			returnable.add(slots.get(i));
+			Slot slot = slots.get(i);
+			slot.setSchedulable(false);
+			slotRepository.save(slot);
+			returnable.add(slot);
 		}
 
 		return returnable;
 	}
 
-	private List<DateTime> getNextSchedulableFridays(DateTime startDate, int fridaysNeeded) {
-		List<DateTime> possibleFridays = new ArrayList<>();
-		DateTime lastDate = startDate;
+	private List<LocalDate> getNextSchedulableFridays(LocalDate startDate, int fridaysNeeded) {
+		List<LocalDate> possibleFridays = new ArrayList<>();
+		LocalDate lastDate = startDate;
 		int fridaysToRequest = fridaysNeeded;
 		while (possibleFridays.size() < fridaysNeeded) {
-			List<DateTime> nextFridays = FridayFinder.getNextFridaysFromDate(lastDate, fridaysToRequest);
-			List<DateTime> nonBanned = nextFridays.stream()
+			List<LocalDate> nextFridays = FridayFinder.getNextFridaysFromDate(lastDate, fridaysToRequest);
+			List<LocalDate> nonBanned = nextFridays.stream()
 					.filter(dateTime -> !bannedDateController.isBannedDate(dateTime)).collect(Collectors.toList());
 			possibleFridays.addAll(nonBanned);
 			// set next date to be last of possibleFridays
@@ -85,6 +93,18 @@ public class SlotController {
 	}
 
 	public void removeSlot(Slot slot) {
+		slot.setSchedulable(false);
+		slotRepository.save(slot);
+	}
+
+	/**
+	 * For usage only by the actual running application, this should be called
+	 * at some period of time.
+	 * 
+	 * @param slot
+	 *            the slot to delete
+	 */
+	public void deleteSlot(Slot slot) {
 		slotRepository.delete(slot);
 	}
 }
