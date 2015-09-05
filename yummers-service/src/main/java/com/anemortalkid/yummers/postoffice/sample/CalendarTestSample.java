@@ -1,4 +1,4 @@
-package com.anemortalkid.yummers.postoffice;
+package com.anemortalkid.yummers.postoffice.sample;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -14,6 +14,9 @@ import javax.mail.util.ByteArrayDataSource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
+
+import com.anemortalkid.yummers.postoffice.EventData;
+import com.anemortalkid.yummers.postoffice.OutlookCalendarInvite;
 
 public class CalendarTestSample {
 

@@ -32,6 +32,12 @@ import com.anemortalkid.yummers.rotation.RotationRepository;
 import com.anemortalkid.yummers.slots.Slot;
 import com.anemortalkid.yummers.slots.SlotRepository;
 
+/**
+ * Runs a schedulable simulation which helps with test data and sanity checking
+ * 
+ * @author JMonterrubio
+ *
+ */
 @Component
 public class Simulation {
 
@@ -78,7 +84,7 @@ public class Simulation {
 	@Autowired
 	private BannedDateRepository bannedDateRepository;
 
-	private DateTime simulationDate = new DateTime();
+	private DateTime simulationDate = pattern.parseDateTime("20/08/2015");
 
 	private boolean setupData;
 
@@ -150,6 +156,7 @@ public class Simulation {
 		// if not generate one
 		if (currentRotation == null) {
 			Rotation newRotation = rotationController.scheduleNewRotation();
+			LOGGER.info("Generated new " + newRotation.toString());
 			// send invites?
 		}
 		shouldUpdateSchedule();

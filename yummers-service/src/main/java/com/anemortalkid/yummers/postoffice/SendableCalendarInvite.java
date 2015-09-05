@@ -14,6 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
+/**
+ * Represents a Sendable {@link CalendarInviteData}
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class SendableCalendarInvite implements Sendable {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());

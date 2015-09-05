@@ -1,7 +1,6 @@
 package com.anemortalkid.yummers;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import java.text.MessageFormat;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,13 +12,18 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.anemortalkid.yummers.accounts.Account;
 import com.anemortalkid.yummers.accounts.AccountRepository;
 import com.anemortalkid.yummers.associates.AssociateRepository;
 import com.anemortalkid.yummers.foodpreference.FoodPreferenceRepository;
 
+/**
+ * Runs the Application and generates some usernames
+ * 
+ * @author JMonterrubio
+ *
+ */
 @SpringBootApplication
 @EnableScheduling
 public class Application implements CommandLineRunner {
@@ -38,13 +42,22 @@ public class Application implements CommandLineRunner {
 	@Value("${yummers.prod.super.password}")
 	private String superPassword;
 
-	// @Value("${yummers.simulation.init}")
-	// private boolean runSimulation;
-
+	/**
+	 * mainguy
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		ApplicationContext ctx = SpringApplication.run(Application.class, args);
 	}
 
+	/**
+	 * Initializes the guest and the super user account
+	 * 
+	 * @param accountRepository
+	 *            the account repository to add the users to
+	 * @return a CommandLineRunner
+	 */
 	@Bean
 	CommandLineRunner init(final AccountRepository accountRepository) {
 		return new CommandLineRunner() {
@@ -56,7 +69,6 @@ public class Application implements CommandLineRunner {
 				}
 
 				// for prod launching so local testers can have a super account
-				// and test the api
 				if (superUser != null) {
 					Account superUserAcct = accountRepository.findByUsername(superUser);
 					if (superUserAcct == null) {
@@ -67,9 +79,13 @@ public class Application implements CommandLineRunner {
 		};
 	}
 
+	/**
+	 * Runs some diagnostics
+	 */
 	@Override
 	public void run(String... args) throws Exception {
 		LOGGER.info("Associates stored= " + associateRepository.count());
 		LOGGER.info("FoodPreferences stored= " + foodPreferenceRepository.count());
+		LOGGER.info(MessageFormat.format("superUser={0}", superUser));
 	}
 }

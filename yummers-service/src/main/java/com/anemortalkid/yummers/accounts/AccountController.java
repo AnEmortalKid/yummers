@@ -14,6 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 
+/**
+ * Controller for the accounts
+ * 
+ * @author JMonterrubio
+ *
+ */
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
@@ -53,30 +59,25 @@ public class AccountController {
 
 		String username = newAccountData.getUsername();
 		if (StringUtils.isBlank(username)) {
-			return ResponseFactory.respondFail(callingPath,
-					"Could not create an account with userName=" + username + ".");
+			return ResponseFactory.respondFail(callingPath, "Could not create an account with userName=" + username + ".");
 		}
 
 		String password = newAccountData.getPassword();
 		if (StringUtils.isBlank(password)) {
-			return ResponseFactory.respondFail(callingPath,
-					"Could not create an account with userName=" + username + ".");
+			return ResponseFactory.respondFail(callingPath, "Could not create an account with userName=" + username + ".");
 		}
 
 		YummersAccessLevel yal = newAccountData.getAccessLevel();
 		if (yal == null) {
-			return ResponseFactory.respondFail(callingPath,
-					"Could not create an account with userName=" + username + ".");
+			return ResponseFactory.respondFail(callingPath, "Could not create an account with userName=" + username + ".");
 		}
 
 		Account account = accountRepository.findByUsername(username);
 		if (account != null) {
-			return ResponseFactory.respondFail(callingPath,
-					"Could not create an account with userName=" + username + ".");
+			return ResponseFactory.respondFail(callingPath, "Could not create an account with userName=" + username + ".");
 		}
 
-		Account registered = new Account(newAccountData.getUsername(), newAccountData.getPassword(),
-				newAccountData.getAccessLevel());
+		Account registered = new Account(newAccountData.getUsername(), newAccountData.getPassword(), newAccountData.getAccessLevel());
 		accountRepository.save(registered);
 		return ResponseFactory.respondOK(callingPath, true);
 	}

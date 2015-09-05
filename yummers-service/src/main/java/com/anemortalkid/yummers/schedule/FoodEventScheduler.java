@@ -27,6 +27,12 @@ import com.anemortalkid.yummers.rotation.RotationController;
 import com.anemortalkid.yummers.slots.Slot;
 import com.anemortalkid.yummers.slots.SlotController;
 
+/**
+ * Schedules food events and sends invites based on events
+ * 
+ * @author JMonterrubio
+ *
+ */
 @Component
 public class FoodEventScheduler {
 
@@ -150,8 +156,7 @@ public class FoodEventScheduler {
 		Associate nextSnackStarter = snackAssociates.get(snackIndex);
 
 		// create new rotation and inactivate the previous one
-		Rotation rotation = new Rotation(extractIds(breakfastSchedulable), extractIds(snackSchedulable),
-				nextBreakfastStarter.getAssociateId(), nextSnackStarter.getAssociateId(), true);
+		Rotation rotation = new Rotation(extractIds(breakfastSchedulable), extractIds(snackSchedulable), nextBreakfastStarter.getAssociateId(), nextSnackStarter.getAssociateId(), true);
 		rotationController.insertNewRotation(rotation);
 
 		// Schedule the events
@@ -237,8 +242,7 @@ public class FoodEventScheduler {
 	private void sendBreakfast(FoodEvent foodEvent) {
 		EventData breakfastInvite = createBreakfastInvite(foodEvent);
 		String breakfastSubject = createSubject("Breakfast", foodEvent);
-		List<String> emails = foodEvent.getBreakfastParticipants().stream().map(id -> createEmailfromId(id))
-				.collect(Collectors.toList());
+		List<String> emails = foodEvent.getBreakfastParticipants().stream().map(id -> createEmailfromId(id)).collect(Collectors.toList());
 
 		postmanController.sendCalendarInviteData(emails, breakfastSubject, breakfastInvite);
 	}
@@ -246,8 +250,7 @@ public class FoodEventScheduler {
 	private void sendSnack(FoodEvent foodEvent) {
 		EventData snackInvite = createSnackfastInvite(foodEvent);
 		String snackSubject = createSubject("Snack", foodEvent);
-		List<String> emails = foodEvent.getSnackParticipants().stream().map(id -> createEmailfromId(id))
-				.collect(Collectors.toList());
+		List<String> emails = foodEvent.getSnackParticipants().stream().map(id -> createEmailfromId(id)).collect(Collectors.toList());
 
 		postmanController.sendCalendarInviteData(emails, snackSubject, snackInvite);
 	}
@@ -256,8 +259,7 @@ public class FoodEventScheduler {
 		return topic + " reminder for Food Friday on " + toDateString(foodEvent.getSlot().getSlotDate());
 	}
 
-	private EventData createCalendarInvite(DateTime startDate, DateTime endDate, String descriptionStr,
-			String locationStr) {
+	private EventData createCalendarInvite(DateTime startDate, DateTime endDate, String descriptionStr, String locationStr) {
 		EventData calendarInviteData = new EventData();
 		calendarInviteData.setDateTimeStart(startDate);
 		calendarInviteData.setDateTimeEnd(endDate);
@@ -270,8 +272,7 @@ public class FoodEventScheduler {
 
 	private EventData createBreakfastInvite(FoodEvent foodEvent) {
 		LocalDate eventDate = foodEvent.getSlot().getSlotDate();
-		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(), 8,
-				30, 0, 0);
+		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(), 8, 30, 0, 0);
 		DateTime endDate = startDate.plusHours(2);
 		List<String> breakfastIds = foodEvent.getBreakfastParticipants();
 		String description = getDescription(breakfastIds.get(0), breakfastIds.get(1), eventDate, "Breakfast");
@@ -280,8 +281,7 @@ public class FoodEventScheduler {
 
 	private EventData createSnackfastInvite(FoodEvent foodEvent) {
 		LocalDate eventDate = foodEvent.getSlot().getSlotDate();
-		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(),
-				12, 0, 0, 0);
+		DateTime startDate = new DateTime(eventDate.getYear(), eventDate.getMonthOfYear(), eventDate.getDayOfMonth(), 12, 0, 0, 0);
 		DateTime endDate = startDate.plusHours(2);
 		List<String> snackIds = foodEvent.getSnackParticipants();
 		String description = getDescription(snackIds.get(0), snackIds.get(1), eventDate, "Snacks");
@@ -289,27 +289,23 @@ public class FoodEventScheduler {
 	}
 
 	private String getDescription(String id1, String id2, LocalDate eventDate, String type) {
-		return MessageFormat.format("{0} remdiner for {1} and {2} on {3} .", type, createNameFromId(id1),
-				createNameFromId(id2), toDateString(eventDate));
+		return MessageFormat.format("{0} remdiner for {1} and {2} on {3} .", type, createNameFromId(id1), createNameFromId(id2), toDateString(eventDate));
 	}
 
 	private String createNameFromId(String associateId) {
 		Associate associate = associateController.findById(associateId);
 		if (associate == null) {
-			logger.error("Received an associate with id = " + associateId
-					+ " to send a calendar invite. Associate does not exist in the system anymore.");
+			logger.error("Received an associate with id = " + associateId + " to send a calendar invite. Associate does not exist in the system anymore.");
 			return "";
 		}
-		String associateFullName = MessageFormat.format(LASTNAME_FIRSTNAME_PATTERN, associate.getLastName(),
-				associate.getFirstName());
+		String associateFullName = MessageFormat.format(LASTNAME_FIRSTNAME_PATTERN, associate.getLastName(), associate.getFirstName());
 		return associateFullName;
 	}
 
 	private String createEmailfromId(String associateId) {
 		Associate associate = associateController.findById(associateId);
 		if (associate == null) {
-			logger.error("Received an associate with id = " + associateId
-					+ " to create an email. Associate does not exist in the system anymore.");
+			logger.error("Received an associate with id = " + associateId + " to create an email. Associate does not exist in the system anymore.");
 			return "";
 		}
 		return associate.getEmail();

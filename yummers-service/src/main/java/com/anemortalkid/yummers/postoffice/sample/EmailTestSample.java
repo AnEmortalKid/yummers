@@ -1,4 +1,4 @@
-package com.anemortalkid.yummers.postoffice;
+package com.anemortalkid.yummers.postoffice.sample;
 
 import java.util.Properties;
 

@@ -1,9 +1,14 @@
 package com.anemortalkid.yummers.slots;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.springframework.data.annotation.Id;
 
+/**
+ * A slot represents a date the system considers to be schedulable
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class Slot {
 	@Id
 	private String id;

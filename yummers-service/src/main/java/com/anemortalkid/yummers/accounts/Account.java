@@ -2,6 +2,12 @@ package com.anemortalkid.yummers.accounts;
 
 import org.springframework.data.annotation.Id;
 
+/**
+ * Represents credentials for the system
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class Account {
 
 	@Id
@@ -11,14 +17,35 @@ public class Account {
 	private String accessLevel;
 
 	public Account() {
+		// for json
 	}
 
+	/**
+	 * Creates an account with the given username, password and accessLevel
+	 * 
+	 * @param username
+	 *            the username for the account
+	 * @param password
+	 *            the password for the account
+	 * @param accessLevel
+	 *            the accessLevel string, coming from {@link YummersAccessLevel}
+	 */
 	public Account(String username, String password, String accessLevel) {
 		this.username = username;
 		this.password = password;
 		this.accessLevel = accessLevel;
 	}
 
+	/**
+	 * Creates an account with the given username, password and accessLevel
+	 * 
+	 * @param username
+	 *            the username for the account
+	 * @param password
+	 *            the password for the account
+	 * @param accessLevel
+	 *            the accessLevel coming from {@link YummersAccessLevel}
+	 */
 	public Account(String userName, String password, YummersAccessLevel yummersAccessLevel) {
 		this.username = userName;
 		this.password = password;

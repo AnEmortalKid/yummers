@@ -11,8 +11,15 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 
+import com.anemortalkid.yummers.slots.FridayFinder;
 import com.sun.media.sound.FFT;
 
+/**
+ * A test for food scheduling
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class FoodScheduler {
 
 	private static List<String> breakfastParticipants = Arrays.asList("b1", "b2", "b3", "b4", "b5", "b6");

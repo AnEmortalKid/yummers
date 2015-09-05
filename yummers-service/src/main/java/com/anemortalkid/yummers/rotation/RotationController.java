@@ -17,6 +17,12 @@ import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 import com.anemortalkid.yummers.schedule.FoodEventScheduler;
 
+/**
+ * Controller for {@link Rotation} objects
+ * 
+ * @author JMonterrubio
+ *
+ */
 @RestController
 @RequestMapping("/rotations")
 public class RotationController {
@@ -45,7 +51,7 @@ public class RotationController {
 	@RequestMapping(value = "/past", method = RequestMethod.GET)
 	public YummersResponseEntity<List<Rotation>> getPastRotations() {
 		String callingPath = "/rotations/past";
-	
+
 		List<Rotation> inactiveRotations = rotationRepository.findByActive(false);
 		return ResponseFactory.respondOK(callingPath, inactiveRotations);
 	}
@@ -94,16 +100,14 @@ public class RotationController {
 		}
 
 		// check all ids contained
-		Set<String> breakfastIds = associatesWithBreakfast.stream().map((associate) -> associate.getAssociateId())
-				.collect(Collectors.toSet());
+		Set<String> breakfastIds = associatesWithBreakfast.stream().map((associate) -> associate.getAssociateId()).collect(Collectors.toSet());
 		for (String string : breakfastAssociates) {
 			if (!breakfastIds.contains(string)) {
 				return true;
 			}
 		}
 
-		Set<String> snackIds = associatesWithSnack.stream().map((associate) -> associate.getAssociateId())
-				.collect(Collectors.toSet());
+		Set<String> snackIds = associatesWithSnack.stream().map((associate) -> associate.getAssociateId()).collect(Collectors.toSet());
 		for (String string : snackAssociates) {
 			if (!snackIds.contains(string)) {
 				return true;

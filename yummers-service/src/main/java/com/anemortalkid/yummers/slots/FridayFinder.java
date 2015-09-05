@@ -1,4 +1,4 @@
-package com.anemortalkid.yummers.experiment;
+package com.anemortalkid.yummers.slots;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +9,12 @@ import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+/**
+ * Utility class that can find Fridays for us
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class FridayFinder {
 
 	/**
@@ -16,16 +22,22 @@ public class FridayFinder {
 	 */
 	public static final DateTimeFormatter DATE_PATTERN = DateTimeFormat.forPattern("dd/MM/yyyy");
 
+	/**
+	 * @return a list of all the fridays between the given start and end date
+	 */
 	public static List<DateTime> getFridays(String startDate, String endDate) {
 		DateTime startDateTime = DATE_PATTERN.parseDateTime(startDate);
 		DateTime endDateTime = DATE_PATTERN.parseDateTime(endDate);
 		return getFridays(startDateTime, endDateTime);
 	}
 
-	public static List<LocalDate> getNextFridaysFromDate(LocalDate date, int fridaysNeeded) {
+	/**
+	 * @return returns a List of fridaysNeeded from the given start date
+	 */
+	public static List<LocalDate> getNextFridaysFromDate(LocalDate startDate, int fridaysNeeded) {
 		List<LocalDate> fridays = new ArrayList<>();
 
-		LocalDate startDateTime = date.plusDays(1);
+		LocalDate startDateTime = startDate.plusDays(1);
 		int fridaysFound = 0;
 		boolean reachedAFriday = false;
 		// add the
@@ -44,6 +56,9 @@ public class FridayFinder {
 		return fridays;
 	}
 
+	/**
+	 * @return a list of all the fridays between the given start and end date
+	 */
 	public static List<DateTime> getFridays(DateTime startDateTime, DateTime endDateTime) {
 		List<DateTime> fridays = new ArrayList<>();
 		boolean reachedAFriday = false;
@@ -61,6 +76,9 @@ public class FridayFinder {
 		return fridays;
 	}
 
+	/**
+	 * @return returns a List of fridaysNeeded from the given start date
+	 */
 	public static List<LocalDate> getNextFridaysFromDate(String dateString, int fridaysNeeded) {
 		DateTime dateTime = DateTime.parse(dateString, DATE_PATTERN);
 		return getNextFridaysFromDate(dateTime.toLocalDate(), fridaysNeeded);

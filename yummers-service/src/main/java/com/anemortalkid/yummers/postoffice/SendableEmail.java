@@ -8,6 +8,12 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
+/**
+ * Represents a Sendable {@link EmailData}
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class SendableEmail implements Sendable {
 
 	private EmailData emailData;

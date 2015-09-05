@@ -14,6 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 
+/**
+ * Controller for {@link BannedDate}s
+ * 
+ * @author JMonterrubio
+ *
+ */
 @RestController
 @RequestMapping("/bannedDates")
 public class BannedDateController {

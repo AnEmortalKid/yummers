@@ -1,5 +1,11 @@
 package com.anemortalkid.yummers.foodpreference;
 
+/**
+ * Enumerates the different types of preference an associate can have
+ * 
+ * @author JMonterrubio
+ *
+ */
 public enum FoodPreferenceType {
 
 	/**

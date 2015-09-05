@@ -6,6 +6,13 @@ import org.springframework.data.annotation.Id;
 
 import com.anemortalkid.yummers.slots.Slot;
 
+/**
+ * Represents an event where people will bring food for breakfast and snack, at
+ * a given {@link Slot}
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class FoodEvent {
 
 	@Id
@@ -23,15 +30,19 @@ public class FoodEvent {
 	}
 
 	/**
-	 * @param id
+	 * Creates a new food event
+	 * 
 	 * @param breakfastParticipants
+	 *            the list of breakfast ids
 	 * @param snackParticipants
-	 * @param date
+	 *            the list of snack ids
+	 * @param slot
+	 *            the slot for the event
 	 */
-	public FoodEvent(List<String> breakfastParticipants, List<String> snackParticipants, Slot date) {
+	public FoodEvent(List<String> breakfastParticipants, List<String> snackParticipants, Slot slot) {
 		this.breakfastParticipants = breakfastParticipants;
 		this.snackParticipants = snackParticipants;
-		this.slot = date;
+		this.slot = slot;
 	}
 
 	public String getId() {

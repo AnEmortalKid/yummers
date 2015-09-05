@@ -2,6 +2,12 @@ package com.anemortalkid.yummers.postoffice;
 
 import java.util.List;
 
+/**
+ * Represents the data needed to send a CalendarInvite
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class CalendarInviteData {
 
 	private List<String> recipients;

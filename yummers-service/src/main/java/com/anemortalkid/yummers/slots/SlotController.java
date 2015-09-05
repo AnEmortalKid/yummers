@@ -3,7 +3,6 @@ package com.anemortalkid.yummers.slots;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -12,8 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.anemortalkid.yummers.banned.BannedDateController;
-import com.anemortalkid.yummers.experiment.FridayFinder;
 
+/**
+ * A controller for Slots
+ * 
+ * @author JMonterrubio
+ *
+ */
 @RestController
 @RequestMapping("/slots")
 public class SlotController {

@@ -11,8 +11,14 @@ import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
 import com.anemortalkid.yummers.slots.SlotController;
 
+/**
+ * Controller for {@link FoodEvent} objects
+ * 
+ * @author JMonterrubio
+ *
+ */
 @RestController
-@RequestMapping("/foodevents")
+@RequestMapping("/foodEvents")
 public class FoodEventController {
 
 	@Autowired

@@ -4,6 +4,12 @@ import org.joda.time.LocalDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.format.annotation.DateTimeFormat;
 
+/**
+ * Represents a date that cannot be scheduled on
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class BannedDate {
 
 	@Id

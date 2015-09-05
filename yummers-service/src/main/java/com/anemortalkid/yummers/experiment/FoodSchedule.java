@@ -1,11 +1,15 @@
 package com.anemortalkid.yummers.experiment;
 
-import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
 import org.joda.time.DateTime;
 
+/**
+ * Represents a scheduled food event with the participants for it for testing
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class FoodSchedule {
 
 	String id;

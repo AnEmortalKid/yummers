@@ -1,7 +1,7 @@
 package com.anemortalkid.yummers.accounts;
 
 /**
- * Enumerates the types of access i'd like this to have
+ * Enumerates the types of access the system allows
  * 
  * @author JMonterrubio
  *

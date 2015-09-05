@@ -4,6 +4,13 @@ import java.util.List;
 
 import org.springframework.data.annotation.Id;
 
+/**
+ * A rotation represents an order of how events will be scheduled. At most there
+ * will be one active one
+ * 
+ * @author JMonterrubio
+ *
+ */
 public class Rotation {
 
 	@Id
@@ -26,9 +33,7 @@ public class Rotation {
 	 * @param nextSnackStarter
 	 * @param active
 	 */
-	public Rotation(List<String> breakfastAssociates,
-			List<String> snackAssociates, String nextBreakfastStarter,
-			String nextSnackStarter, boolean active) {
+	public Rotation(List<String> breakfastAssociates, List<String> snackAssociates, String nextBreakfastStarter, String nextSnackStarter, boolean active) {
 		this.breakfastAssociates = breakfastAssociates;
 		this.snackAssociates = snackAssociates;
 		this.nextBreakfastStarter = nextBreakfastStarter;

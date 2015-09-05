@@ -8,6 +8,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 /**
+ * Represents an invite for outlook
  * 
  * @author JMonterrubio
  *
@@ -22,8 +23,7 @@ public class OutlookCalendarInvite {
 	private String summary;
 
 	public OutlookCalendarInvite(EventData inviteData) {
-		this(inviteData.getMailTo(), inviteData.getDateStart(), inviteData.getDateEnd(), inviteData.getLocation(),
-				inviteData.getDescription(), inviteData.getSummary());
+		this(inviteData.getMailTo(), inviteData.getDateStart(), inviteData.getDateEnd(), inviteData.getLocation(), inviteData.getDescription(), inviteData.getSummary());
 	}
 
 	/**
@@ -34,8 +34,7 @@ public class OutlookCalendarInvite {
 	 * @param description
 	 * @param summary
 	 */
-	public OutlookCalendarInvite(String mailto, DateTime dateStart, DateTime dateEnd, String location,
-			String description, String summary) {
+	public OutlookCalendarInvite(String mailto, DateTime dateStart, DateTime dateEnd, String location, String description, String summary) {
 		this.mailto = mailto;
 		this.dateStart = dateStart;
 		this.dateEnd = dateEnd;
@@ -133,8 +132,7 @@ public class OutlookCalendarInvite {
 		return MessageFormat.format(template, vEventString);
 	}
 
-	private String generateVEventString(String mailTo, DateTime dtStart, DateTime dtEnd, String location,
-			String description, String summary) {
+	private String generateVEventString(String mailTo, DateTime dtStart, DateTime dtEnd, String location, String description, String summary) {
 		/**
 		 * <pre>
 		 * "BEGIN:VEVENT\n"
@@ -182,10 +180,10 @@ public class OutlookCalendarInvite {
 		String endDateStr = dateToFortunaStringFormat(convertedEnd);
 		String timeStamp = dateToFortunaStringFormat(new DateTime());
 
-		// TODO: this will be database eventually, hopefully
+		// the id doesn't matter unless we need to send updates so not worth
+		// changing atm
 		UUID randomUUID = UUID.randomUUID();
-		return MessageFormat.format(template, mailTo, startDateStr, endDateStr, location, randomUUID.toString(),
-				timeStamp, description, summary);
+		return MessageFormat.format(template, mailTo, startDateStr, endDateStr, location, randomUUID.toString(), timeStamp, description, summary);
 	}
 
 	/**
