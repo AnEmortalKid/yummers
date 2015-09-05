@@ -83,14 +83,4 @@ public class FoodScheduler {
 		}
 		return schedule;
 	}
-
-	// public static void main(String[] args) {
-	// List<FoodSchedule> schedule = schedule(breakfastParticipants,
-	// snackParticipants, fridays);
-	// schedule.forEach(x -> System.out.println(x));
-	//
-	// System.out.println("Transposed by 1");
-	// transposeList(schedule, 1);
-	// schedule.forEach(x -> System.out.println(x));
-	// }
 }

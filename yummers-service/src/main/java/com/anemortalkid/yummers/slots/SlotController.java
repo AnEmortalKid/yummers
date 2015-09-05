@@ -28,8 +28,7 @@ public class SlotController {
 		List<Slot> slots = slotRepository.findByIsSchedulable(true);
 
 		// remove the banned ones
-		List<Slot> banned = slots.stream().filter((slot) -> bannedDateController.isBannedDate(slot.getSlotDate()))
-				.collect(Collectors.toList());
+		List<Slot> banned = slots.stream().filter((slot) -> bannedDateController.isBannedDate(slot.getSlotDate())).collect(Collectors.toList());
 		if (!banned.isEmpty()) {
 			// remove the banned ones from the slots
 			System.out.println("Found some banned dates");
@@ -82,8 +81,7 @@ public class SlotController {
 		int fridaysToRequest = fridaysNeeded;
 		while (possibleFridays.size() < fridaysNeeded) {
 			List<LocalDate> nextFridays = FridayFinder.getNextFridaysFromDate(lastDate, fridaysToRequest);
-			List<LocalDate> nonBanned = nextFridays.stream()
-					.filter(dateTime -> !bannedDateController.isBannedDate(dateTime)).collect(Collectors.toList());
+			List<LocalDate> nonBanned = nextFridays.stream().filter(dateTime -> !bannedDateController.isBannedDate(dateTime)).collect(Collectors.toList());
 			possibleFridays.addAll(nonBanned);
 			// set next date to be last of possibleFridays
 			lastDate = possibleFridays.get(possibleFridays.size() - 1);
@@ -92,6 +90,12 @@ public class SlotController {
 		return possibleFridays;
 	}
 
+	/**
+	 * Sets the given slot to not be schedulable
+	 * 
+	 * @param slot
+	 *            the slot to set unschedulable on
+	 */
 	public void removeSlot(Slot slot) {
 		slot.setSchedulable(false);
 		slotRepository.save(slot);

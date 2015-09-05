@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.anemortalkid.yummers.responses.ResponseFactory;
 import com.anemortalkid.yummers.responses.YummersResponseEntity;
+import com.anemortalkid.yummers.slots.SlotController;
 
 @RestController
 @RequestMapping("/foodevents")
@@ -17,10 +18,12 @@ public class FoodEventController {
 	@Autowired
 	private FoodEventRepository foodEventRepository;
 
+	@Autowired
+	private SlotController slotController;
+
 	public List<FoodEvent> saveNewEvents(List<FoodEvent> newEvents) {
 		// remove active ones first
-		List<FoodEvent> previousActive = foodEventRepository
-				.findByIsActive(true);
+		List<FoodEvent> previousActive = foodEventRepository.findByIsActive(true);
 		previousActive.forEach(foodEvent -> foodEvent.setActive(false));
 		foodEventRepository.save(previousActive);
 
@@ -39,8 +42,7 @@ public class FoodEventController {
 	public YummersResponseEntity<FoodEvent> upcomingEvent() {
 		List<FoodEvent> activeEvents = foodEventRepository.findByIsActive(true);
 		String callingPath = "/foodEvents/upcoming";
-		FoodEvent firstEvent = activeEvents.isEmpty() ? null : activeEvents
-				.get(0);
+		FoodEvent firstEvent = activeEvents.isEmpty() ? null : activeEvents.get(0);
 		return ResponseFactory.respondOK(callingPath, firstEvent);
 	}
 
@@ -57,6 +59,8 @@ public class FoodEventController {
 
 	public void deactivateEvent(FoodEvent upcomingEvent) {
 		upcomingEvent.setActive(false);
+		// clean up stuff
+		slotController.removeSlot(upcomingEvent.getSlot());
 		foodEventRepository.save(upcomingEvent);
 	}
 

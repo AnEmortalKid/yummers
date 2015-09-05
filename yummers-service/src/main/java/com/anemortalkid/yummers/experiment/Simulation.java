@@ -1,5 +1,6 @@
 package com.anemortalkid.yummers.experiment;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -7,16 +8,16 @@ import org.joda.time.DateTimeConstants;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.anemortalkid.yummers.associates.Associate;
 import com.anemortalkid.yummers.associates.AssociateController;
 import com.anemortalkid.yummers.associates.AssociateRepository;
+import com.anemortalkid.yummers.auth.AbstractAuthenticatedAction;
 import com.anemortalkid.yummers.banned.BannedDate;
 import com.anemortalkid.yummers.banned.BannedDateController;
 import com.anemortalkid.yummers.banned.BannedDateRepository;
@@ -34,13 +35,15 @@ import com.anemortalkid.yummers.slots.SlotRepository;
 @Component
 public class Simulation {
 
+	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
+
 	@Value("${yummers.prod.super.user}")
 	private String superUser;
 
 	@Value("${yummers.prod.super.password}")
 	private String superPassword;
 
-	DateTimeFormatter pattern = DateTimeFormat.forPattern("dd/MM/yyyy");
+	private static final DateTimeFormatter pattern = DateTimeFormat.forPattern("dd/MM/yyyy");
 
 	@Autowired
 	private FoodPreferenceRepository foodPreferenceRepository;
@@ -86,7 +89,6 @@ public class Simulation {
 	}
 
 	private void setupData() {
-
 		// clear repos
 		associateRepository.deleteAll();
 		slotRepository.deleteAll();
@@ -95,10 +97,6 @@ public class Simulation {
 		rotationRepository.deleteAll();
 		bannedDateRepository.deleteAll();
 
-		UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(superUser,
-				superPassword);
-		SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-
 		bannedDateController.addBannedDate(LocalDate.parse("18/9/2015", pattern));
 		bannedDateController.addBannedDate(LocalDate.parse("24/12/2015", pattern));
 		bannedDateController.addBannedDate(LocalDate.parse("25/12/2015", pattern));
@@ -106,8 +104,7 @@ public class Simulation {
 		bannedDateController.addBannedDate(LocalDate.parse("31/12/2015", pattern));
 		bannedDateController.addBannedDate(LocalDate.parse("01/01/2016", pattern));
 		List<BannedDate> bannedDates = bannedDateController.getBannedDates();
-		bannedDates
-				.forEach(bannedDate -> System.out.println("banneDate=" + bannedDate.getBannedDate().toString(pattern)));
+		bannedDates.forEach(bannedDate -> System.out.println("banneDate=" + bannedDate.getBannedDate().toString(pattern)));
 
 		for (int i = 0; i < 8; i++) {
 			associateId++;
@@ -124,12 +121,24 @@ public class Simulation {
 		}
 	}
 
-	// XXX: if you want to generate some simulated data, let this run
+	// XXX: uncomment this if you wanna generate some simulated data
 	// @Scheduled(fixedRate = 2000)
-	public void checkStateAndDoAction() {
-		System.out.println("Time:" + simulationDate.toString(DateTimeFormat.forPattern("dd/MM/yyyy")));
+	public void runSimulation() {
+		new AbstractAuthenticatedAction<Void>(superUser, superPassword) {
+
+			@Override
+			protected Void performAction() {
+				LOGGER.info("Checking simulation state");
+				checkStateAndDoAction();
+				return null;
+			}
+		}.perform();
+	}
+
+	private void checkStateAndDoAction() {
+		LOGGER.info(MessageFormat.format("Current Date is {0}", simulationDate.toString(DateTimeFormat.forPattern("dd/MM/yyyy"))));
 		if (simulationDate.getDayOfWeek() == DateTimeConstants.FRIDAY)
-			System.out.println("FRIDAY");
+			LOGGER.info("It is FRIDAY");
 		if (!setupData) {
 			setupData();
 			setupData = true;
@@ -174,8 +183,7 @@ public class Simulation {
 
 			if (simDay == sDay) {
 				// friday
-				System.out.println("Scheduled event with breakfast=" + upcomingEvent.getBreakfastParticipants()
-						+ ", and snack=" + upcomingEvent.getSnackParticipants());
+				System.out.println("Scheduled event with breakfast=" + upcomingEvent.getBreakfastParticipants() + ", and snack=" + upcomingEvent.getSnackParticipants());
 			} else if (simDay == sDay + 1) {
 				// make event obsolete
 				System.out.println("Deactivating->" + upcomingEvent);

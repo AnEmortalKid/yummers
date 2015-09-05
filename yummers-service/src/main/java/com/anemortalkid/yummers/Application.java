@@ -1,5 +1,8 @@
 package com.anemortalkid.yummers;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +38,9 @@ public class Application implements CommandLineRunner {
 	@Value("${yummers.prod.super.password}")
 	private String superPassword;
 
+	// @Value("${yummers.simulation.init}")
+	// private boolean runSimulation;
+
 	public static void main(String[] args) {
 		ApplicationContext ctx = SpringApplication.run(Application.class, args);
 	}
@@ -54,8 +60,7 @@ public class Application implements CommandLineRunner {
 				if (superUser != null) {
 					Account superUserAcct = accountRepository.findByUsername(superUser);
 					if (superUserAcct == null) {
-						accountRepository.save(new Account(superUser, superPassword == null ? superUser : superPassword,
-								"ROLE_SUPER"));
+						accountRepository.save(new Account(superUser, superPassword == null ? superUser : superPassword, "ROLE_SUPER"));
 					}
 				}
 			}

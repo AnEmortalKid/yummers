@@ -1,4 +1,4 @@
-package com.anemortalkid.yummers.schedule;
+package com.anemortalkid.yummers.tasks;
 
 import java.util.List;
 
@@ -10,14 +10,17 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.anemortalkid.yummers.auth.AbstractAuthenticatedAction;
 import com.anemortalkid.yummers.banned.BannedDateController;
 import com.anemortalkid.yummers.foodevent.FoodEvent;
 import com.anemortalkid.yummers.foodevent.FoodEventController;
 import com.anemortalkid.yummers.rotation.Rotation;
 import com.anemortalkid.yummers.rotation.RotationController;
+import com.anemortalkid.yummers.schedule.FoodEventScheduler;
 
 /**
  * A class that contains scheduled methods that perform the continuous running
@@ -29,10 +32,16 @@ import com.anemortalkid.yummers.rotation.RotationController;
 @Component
 public class SchedulerTask {
 
-	private Logger logger = LoggerFactory.getLogger(getClass());
-
 	private DateTimeFormatter dayMonthYear = DateTimeFormat.forPattern("dd/MM/yyyy");
 	private DateTimeFormatter ddMMyyyHHmmss = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
+
+	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
+
+	@Value("${yummers.prod.super.user}")
+	private String superUser;
+
+	@Value("${yummers.prod.super.password}")
+	private String superPassword;
 
 	@Autowired
 	private FoodEventController foodEventController;
@@ -52,11 +61,22 @@ public class SchedulerTask {
 	 * stuff is schedulable, otherwise do nothing.
 	 */
 	@Scheduled(cron = "0 30 6 ? * *")
-	public void checkEventStateDaily() {
+	public void checkEventStateAction() {
+		new AbstractAuthenticatedAction<Void>(superUser, superPassword) {
 
+			@Override
+			protected Void performAction() {
+				LOGGER.info("Checking event state daily");
+				checkEventStateDaily();
+				return null;
+			}
+		}.perform();
+	}
+
+	private void checkEventStateDaily() {
 		// check what day we are in
 		DateTime currentDateTime = new DateTime();
-		logger.info("Current date " + currentDateTime.toString(ddMMyyyHHmmss));
+		LOGGER.info("Current date " + currentDateTime.toString(ddMMyyyHHmmss));
 		LocalDate currentDate = currentDateTime.toLocalDate();
 
 		// get upcoming event or create it
@@ -67,10 +87,10 @@ public class SchedulerTask {
 			if (newRotation == null) {
 				// there were data issues
 				String unschedulableReason = foodEventScheduler.getUnschedulableReason();
-				logger.error(unschedulableReason);
+				LOGGER.error(unschedulableReason);
 				return;
 			} else {
-				logger.info("Sending invite to participants");
+				LOGGER.info("Sending invite to participants");
 				// send food schedule calendar invite to participants
 				List<FoodEvent> activeEvents = foodEventController.getActiveEvents();
 				foodEventScheduler.sendCalendarinvites(activeEvents);
@@ -83,7 +103,7 @@ public class SchedulerTask {
 		int eventDay = eventDate.getDayOfMonth();
 		int eventMonth = eventDate.getMonthOfYear();
 		int eventYear = eventDate.getYear();
-		logger.info("Next upcoming event date " + eventDate.toString(dayMonthYear));
+		LOGGER.info("Next upcoming event date " + eventDate.toString(dayMonthYear));
 
 		// check date and if we should send reminder
 		int currentDay = currentDateTime.getDayOfMonth();
@@ -94,16 +114,16 @@ public class SchedulerTask {
 			if (eventMonth == currentMonth) {
 				// check if we are 2 days away from event and send a reminder
 				if (currentDay + 2 == eventDay) {
-					logger.info("Sending reminder to event participants");
+					LOGGER.info("Sending reminder to event participants");
 					foodEventScheduler.sendEmailReminder(upcomingEvent);
 				}
 				if (currentDay == eventDay) {
-					logger.info("Event day today");
+					LOGGER.info("Event day today");
 				}
 				if (currentDateTime.getDayOfWeek() == DateTimeConstants.FRIDAY) {
 					boolean isBanned = bannedDateController.isBannedDate(currentDate);
 					if (isBanned) {
-						logger.info("Current friday is banned, date = " + currentDateTime.toString(dayMonthYear));
+						LOGGER.info("Current friday is banned, date = " + currentDateTime.toString(dayMonthYear));
 					}
 				}
 			}
@@ -113,12 +133,25 @@ public class SchedulerTask {
 
 	/**
 	 * Check every Friday at 10:30 PM for the next upcoming event and deactivate
+	 * that friday's event so the next one is fresh and new
 	 */
 	@Scheduled(cron = "0 30 22 ? * FRI")
+	public void purgePastEventsAction() {
+		new AbstractAuthenticatedAction<Void>(superUser, superPassword) {
+
+			@Override
+			protected Void performAction() {
+				LOGGER.info("Purging past events");
+				purgePastEvent();
+				return null;
+			}
+		}.perform();
+	}
+
 	private void purgePastEvent() {
 		FoodEvent upcomingEvent = foodEventController.getUpcomingEvent();
 		if (upcomingEvent != null) {
-			logger.info("Deactivating event=" + upcomingEvent);
+			LOGGER.info("Deactivating event=" + upcomingEvent);
 			foodEventController.deactivateEvent(upcomingEvent);
 		}
 	}
