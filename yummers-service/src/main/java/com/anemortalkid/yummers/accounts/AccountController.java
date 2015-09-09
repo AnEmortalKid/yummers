@@ -81,4 +81,42 @@ public class AccountController {
 		accountRepository.save(registered);
 		return ResponseFactory.respondOK(callingPath, true);
 	}
+
+	/**
+	 * Ideally, external applications would call us with this to authenticate
+	 * the user once, before pretending the user has authentication and failing
+	 * to retrieve data
+	 * 
+	 * @param credentials
+	 *            the {@link CredentialData} to check
+	 * @return a {@link YummersResponseEntity} with {@link AccountCredentials}
+	 *         for that user
+	 */
+	@PreAuthorize("hasRole('ROLE_BASIC')")
+	@RequestMapping(value = "/checkCredentials", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+	public YummersResponseEntity<AccountCredentials> getAccessLevel(@RequestBody CredentialData credentials) {
+		String callingPath = "/accounts/checkCredentials";
+
+		String username = credentials.getUsername();
+		if (StringUtils.isBlank(username)) {
+			return ResponseFactory.respondForbidden(callingPath);
+		}
+
+		Account account = accountRepository.findByUsername(username);
+		if (account != null) {
+			boolean pwMatches = account.getPassword().equals(credentials.getPassword());
+			if (!pwMatches) {
+				return ResponseFactory.respondForbidden(callingPath);
+			}
+
+			// passwords match get access level
+			String accesLevel = account.getAccessLevel();
+			AccountCredentials ac = new AccountCredentials();
+			ac.setAccessLevel(YummersAccessLevel.valueOf(accesLevel));
+			ac.setUsername(username);
+			return ResponseFactory.respondOK(callingPath, ac);
+		}
+
+		return ResponseFactory.respondForbidden(callingPath);
+	}
 }
