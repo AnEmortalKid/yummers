@@ -3,6 +3,8 @@ package com.anemortalkid.yummers.responses;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
+import com.anemortalkid.yummers.accounts.AccountCredentials;
+
 /**
  * A Factory for {@link YummersResponseEntity} with different helper methods
  * 
@@ -65,6 +67,17 @@ public class ResponseFactory {
 	 */
 	public static <T> YummersResponseEntity<T> respondOK(String location, T body) {
 		return new YummersResponseEntity<T>(body, getHeaders(location), HttpStatus.OK);
+	}
+
+	/**
+	 * Responds with HttpStatus.Forbidden with no additional information
+	 * 
+	 * @param location
+	 *            the location where the illegal access happened
+	 * @return a {@link YummersResponseEntity} with Forbidden and the location
+	 */
+	public static <T> YummersResponseEntity<T> respondForbidden(String location) {
+		return new YummersResponseEntity<T>(getHeaders(location), HttpStatus.FORBIDDEN);
 	}
 
 	private static HttpHeaders getHeaders(String location) {
