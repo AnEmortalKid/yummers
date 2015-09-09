@@ -1,6 +1,6 @@
 # Overview
 
-Yummers REST is a service application for generating a schedule of food events.
+Yummers REST is a service application for generating a schedule of food events. Personnal branch
 
 # Contribution
 - Feel free to Fork and submit pull requests or create git issues if you find defects or enhancements
